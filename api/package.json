@@ -1,0 +1,26 @@
+{
+  "name": "dero-bridge-rpc-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild ./src/index.js --outdir=dist",
+    "webpage-test-build": "esbuild ./webpage-test/index.js --jsx-factory=h --bundle --outdir=./webpage-test/dist --loader:.js=jsx --watch",
+    "webpage-test-serve": "live-server ./webpage-test --port=8383 --watch",
+    "start": "concurrently \"npm run build -- --watch\" \"npm run webpage-test-build\" \"npm run webpage-test-serve\""
+  },
+  "author": "g45t345rt",
+  "license": "ISC",
+  "dependencies": {
+    "nanoid": "^3.3.1"
+  },
+  "devDependencies": {
+    "await-to-js": "^3.0.0",
+    "concurrently": "^7.0.0",
+    "esbuild": "^0.14.28",
+    "preact": "^10.6.6"
+  }
+}
