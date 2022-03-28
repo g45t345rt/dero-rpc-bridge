@@ -1,8 +1,10 @@
 import { render, h } from 'preact'
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
+import Router from 'preact-router'
 import browser from 'webextension-polyfill'
+import { createHashHistory } from 'history'
 
-const App = () => {
+const Popup = () => {
   const lockTransfer = true
 
   const [deamonRPCText, setDeamonRPCText] = useState('')
@@ -123,6 +125,33 @@ const App = () => {
       </div>
     </div>
   </div>
+}
+
+const Confirm = () => {
+  const [params, setParams] = useState()
+  useEffect(async () => {
+    const res = await browser.runtime.sendMessage({ type: 'temp-transfer-params' })
+    setParams(JSON.stringify(res))
+    console.log(res)
+  }, [])
+
+  const confirmTransfer = useCallback(async () => {
+    const res = await browser.runtime.sendMessage({ type: 'wallet-rpc', args: { method: 'Echo' } })
+  }, [])
+
+  return <div>
+    <div>confirm!</div>
+    <div>{params}</div>
+    <button onClick={() => window.close()}>no</button>
+    <button>yes</button>
+  </div>
+}
+
+const App = () => {
+  return <Router history={createHashHistory()}>
+    <Popup path="/" />
+    <Confirm path="/confirm" />
+  </Router>
 }
 
 render(<App />, document.getElementById('app'))

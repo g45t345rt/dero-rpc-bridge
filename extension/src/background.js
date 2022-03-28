@@ -38,6 +38,7 @@ const rpcCall = async (options) => {
   }
 }
 
+let tempTransferParams = null
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // listener needs to return true or it will fail - dont use async listener func
   // https://stackoverflow.com/questions/44056271/chrome-runtime-onmessage-response-with-async-await
@@ -92,25 +93,30 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       if (method === 'Transfer') {
         // show prompt
+        const window = await browser.windows.getCurrent()
+        const width = 200
+        const height = 200
+
+        tempTransferParams = params
+        browser.windows.create({
+          url: `chrome-extension://${browser.runtime.id}/popup.html#/confirm`,
+          type: "popup",
+          width: width,
+          height: height,
+        })
+
         sendResponse({ err: 'Prompt!' })
         return
       }
 
       const res = await rpcCall(options)
       sendResponse(res)
+    } else if (type === 'temp-transfer-params') {
+      sendResponse(tempTransferParams)
     } else {
       sendResponse({ err: 'Invalid type.' })
     }
   }
-
-  /*browserwindows.create({
-    url: `chrome-extension://${browser.runtime.id}/options.html`,
-    type: "popup",
-    left: 0,
-    top: 0,
-    width: 200,
-    height: 200,
-  })*/
 
   run()
   return true
