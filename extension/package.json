@@ -4,10 +4,12 @@
   "author": "g45t345rt",
   "scripts": {
     "build": "node build.js",
-    "start": "node build.js watch"
+    "start": "node build.js watch",
+    "build-ext": "web-ext build -s dist -o"
   },
   "dependencies": {
     "preact": "^10.6.6",
+    "web-ext": "^6.8.0",
     "webextension-polyfill": "^0.9.0"
   },
   "devDependencies": {

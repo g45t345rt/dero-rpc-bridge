@@ -1,6 +1,6 @@
 {
-  "name": "Test",
-  "description": "Ext",
+  "name": "Dero RPC Bridge",
+  "description": "Safely connect your local wallet with a website using Dero RPC Bridge.",
   "version": "1.0",
   "manifest_version": 3,
   "background": {
