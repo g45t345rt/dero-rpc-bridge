@@ -81,7 +81,10 @@ const Popup = () => {
   }, [])
 
   return <div>
-    <div class="app-title">DERO Bridge</div>
+    <div class="app-title">
+      <img src="icon16.png" />
+      DERO Bridge
+    </div>
     <div class="app">
       <div>
         <div class="input-title">Deamon RPC</div>
@@ -118,10 +121,6 @@ const Popup = () => {
         <div class="input-wrap">
           <input ref={refPasswordRPC} type="password" class="input" onChange={setPasswordRPC} />
         </div>
-      </div>
-      <div class="input-checkbox">
-        <label>Prompt on transaction</label>
-        <input type="checkbox" checked={lockTransfer} />
       </div>
     </div>
   </div>

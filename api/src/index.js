@@ -47,7 +47,7 @@ export default class DeroBridgeApi {
       this.channel.port1.start()
 
       setTimeout(() => {
-        if (!this.initialized) reject()
+        if (!this.initialized) reject(`Can't initialized.`)
       }, 1000)
 
       window.addEventListener('load', () => {
