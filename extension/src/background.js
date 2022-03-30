@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill'
+import { nanoid } from 'nanoid'
 
 const rpcCall = async (options) => {
   try {
@@ -29,7 +30,8 @@ const rpcCall = async (options) => {
     })
 
     if (res.ok) {
-      return { result: res }
+      const result = await res.json()
+      return { result }
     } else {
       return { err: res.statusText }
     }
@@ -38,89 +40,109 @@ const rpcCall = async (options) => {
   }
 }
 
-let tempTransferParams = null
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // listener needs to return true or it will fail - dont use async listener func
-  // https://stackoverflow.com/questions/44056271/chrome-runtime-onmessage-response-with-async-await
+let transferStateMap = new Map()
+let popupOrigin = `chrome-extension://${browser.runtime.id}`
 
-  const run = async () => {
+const listen = () => {
+  browser.runtime.onMessage.addListener(async (message, sender) => {
     const config = await browser.storage.local.get(['deamonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
 
-    const { type, args } = message
-    if (type === 'deamon-rpc') {
-      const { method, params } = args
+    const { entity } = message
+    if (entity === 'deamon') {
+      const { action, args } = message
 
-      if (!method) {
-        sendResponse({ err: 'Method is missing.' })
-        return
+      const options = { url: config.deamonRPC }
+      if (action === 'echo') {
+        const res = await rpcCall({ ...options, method: 'Echo' })
+        return Promise.resolve(res)
       }
 
-      const options = {
-        url: config.deamonRPC,
-        method,
-        params
+      if (action === 'get-gas-estimate') {
+        const res = await rpcCall({ ...options, method: 'GetGasEstimate', params: args })
+        return Promise.resolve(res)
       }
 
-      const validMethods = ['Echo', 'GetGasEstimate', 'GetSC']
-      if (validMethods.indexOf(method) === -1) {
-        sendResponse({ err: 'Method not supported.' })
-        return
+      if (action === 'get-sc') {
+        const res = await rpcCall({ ...options, method: 'GetSC', params: args })
+        return Promise.resolve(res)
       }
 
-      const res = await rpcCall(options)
-      sendResponse(res)
-    } else if (type === 'wallet-rpc') {
-      const { method, params } = args
+      return Promise.reject({ err: 'Invalid action.' })
+    }
 
-      if (!method) {
-        sendResponse({ err: 'Method is missing.' })
-        return
-      }
-
+    if (entity === 'wallet') {
+      const { action, args } = message
       const options = {
         url: config.walletRPC,
         user: config.userRPC,
-        password: config.passwordRPC,
-        method,
-        params
+        password: config.passwordRPC
       }
 
-      const validMethods = ['Echo', 'GetAddress', 'GetBalance', 'Transfer']
-      if (validMethods.indexOf(method) === -1) {
-        sendResponse({ err: 'Method not supported.' })
-        return
+      if (action === 'echo') {
+        const res = await rpcCall({ ...options, method: 'Echo', params: args })
+        return Promise.resolve(res)
       }
 
-      if (method === 'Transfer') {
-        // show prompt
+      if (action === 'start-transfer') {
+        const transferStateId = nanoid()
+        const promise = new Promise((resolve) => {
+          transferStateMap.set(transferStateId, {
+            resolve,
+            params: args
+          })
+        })
+
+        // vars to center confirm popup
         const window = await browser.windows.getCurrent()
         const width = 200
         const height = 200
+        const tab = (await browser.tabs.query({ active: true, currentWindow: true }))[0]
+        const left = Math.round(((tab.width / 2) - (width / 2)) + window.left)
+        const top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
 
-        tempTransferParams = params
         browser.windows.create({
-          url: `chrome-extension://${browser.runtime.id}/popup.html#/confirm`,
+          url: `chrome-extension://${browser.runtime.id}/popup.html#/confirm?transferStateId=${transferStateId}`,
           type: "popup",
-          width: width,
-          height: height,
+          left,
+          top,
+          width,
+          height,
         })
 
-        sendResponse({ err: 'Prompt!' })
-        return
+        return promise
       }
 
-      const res = await rpcCall(options)
-      sendResponse(res)
-    } else if (type === 'temp-transfer-params') {
-      sendResponse(tempTransferParams)
-    } else {
-      sendResponse({ err: 'Invalid type.' })
-    }
-  }
+      // Get transfer args for popup confirm
+      if (action === 'get-transfer-state') {
+        if (sender.origin !== popupOrigin) {
+          return Promise.reject({ err: 'Invalid action.' })
+        }
 
-  run()
-  return true
-})
+        const transferState = transferStateMap.get(args.id)
+        return Promise.resolve(transferState)
+      }
+
+      // Execute the transaction from popup confirm - user validation
+      if (action === 'confirm-transfer') {
+        if (sender.origin !== popupOrigin) { // this is important to avoid the webpage calling this method and transfering funds without the user knowing
+          return Promise.reject({ err: 'Invalid action.' })
+        }
+
+        const transferState = transferStateMap.get(args.id)
+        if (!transferState) return Promise.reject({ err: 'Transfer state not found.' })
+
+        const res = await rpcCall({ ...options, method: 'Transfer', params: transferState.params })
+        transferState.resolve(res)
+        transferStateMap.delete(args.id)
+        return Promise.resolve(res)
+      }
+
+      return Promise.reject({ err: 'Invalid action.' })
+    }
+
+    return Promise.reject({ err: 'Invalid entity.' })
+  })
+}
 
 const main = async () => {
   // Default wallet and deamon rpc endpoints
@@ -128,6 +150,8 @@ const main = async () => {
   const { deamonRPC, walletRPC } = config
   if (!deamonRPC) browser.storage.local.set({ deamonRPC: "http://localhost:20000" })
   if (!walletRPC) browser.storage.local.set({ walletRPC: "http://localhost:40403" })
+
+  listen()
 }
 
 main()

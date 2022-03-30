@@ -14,18 +14,20 @@ const App = () => {
       setBridgeInitText('failed to connect to extension')
     } else {
       setBridgeInitText('connected to extension')
-      const res = await deroBridgeApi.deamonRPC('Echo')
+      const res = await deroBridgeApi.deamon('echo')
       console.log(res)
     }
   }, [])
 
   const transfer = useCallback(async () => {
-    const [err] = await to(deroBridgeApi.walletRPC('Transfer', {
+    const [err, res] = await to(deroBridgeApi.wallet('start-transfer', {
+      scid: "00000000000000000000000000000000",
       destination: "deto1qyg7mqwag7lch9267dttyrxy5jlc8tqwedtel77kpq0zh2zr7rvlsqgs2cz33",
       amount: 10000,
     }))
 
     console.log(err)
+    console.log(res)
   }, [])
 
   return <div>

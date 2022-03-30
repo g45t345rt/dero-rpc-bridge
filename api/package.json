@@ -1,5 +1,5 @@
 {
-  "name": "dero-bridge-rpc-api",
+  "name": "dero-rpc-bridge-api",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import Router from 'preact-router'
 import browser from 'webextension-polyfill'
 import { createHashHistory } from 'history'
+import querystring from 'query-string'
 
 const Popup = () => {
   const lockTransfer = true
@@ -21,7 +22,7 @@ const Popup = () => {
   const checkDeamonRPC = useCallback(async () => {
     setDeamonRPCText('loading...')
     setDeamonRPCStatus('loading')
-    const res = await browser.runtime.sendMessage({ type: 'deamon-rpc', args: { method: 'Echo' } })
+    const res = await browser.runtime.sendMessage({ entity: 'deamon', action: 'echo' })
     const { err } = res
     if (err) {
       setDeamonRPCText(err)
@@ -35,7 +36,7 @@ const Popup = () => {
   const checkWalletRPC = useCallback(async () => {
     setWalletRPCText('loading...')
     setWalletRPCStatus('loading')
-    const res = await browser.runtime.sendMessage({ type: 'wallet-rpc', args: { method: 'Echo' } })
+    const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'echo' })
     const { err } = res
     if (err) {
       setWalletRPCText(err)
@@ -90,7 +91,7 @@ const Popup = () => {
         <div class="input-title">Deamon RPC</div>
         <div class="input-wrap">
           <input ref={refDeamonRPC} class="input" type="text" />
-          <button class="input-button" onClick={setDeamonRPC}>Set</button>
+          <button class="input-button" onClick={setDeamonRPC} disabled={deamonRPCStatus === 'loading'}>Set</button>
         </div>
         <div class="status-block">
           <span class={`${deamonRPCStatus}-dot`} />
@@ -101,7 +102,7 @@ const Popup = () => {
         <div class="input-title">Wallet RPC</div>
         <div class="input-wrap">
           <input ref={refWalletRPC} class="input" type="text" />
-          <button class="input-button" onClick={setWalletRPC}>Set</button>
+          <button class="input-button" onClick={setWalletRPC} disabled={walletRPCStatus === 'loading'}>Set</button>
         </div>
         <div class="status-block">
           <span class={`${walletRPCStatus}-dot`} />
@@ -126,23 +127,37 @@ const Popup = () => {
   </div>
 }
 
+const getQuery = () => {
+  const href = window.location.href
+  const search = href.substring(href.indexOf('?'), href.length)
+  return querystring.parse(search)
+}
+
 const Confirm = () => {
+  const query = getQuery()
+
   const [params, setParams] = useState()
+  const [res, setRes] = useState()
+
   useEffect(async () => {
-    const res = await browser.runtime.sendMessage({ type: 'temp-transfer-params' })
-    setParams(JSON.stringify(res))
+    const { transferStateId } = query
+    const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } })
+    setParams(res)
     console.log(res)
   }, [])
 
   const confirmTransfer = useCallback(async () => {
-    const res = await browser.runtime.sendMessage({ type: 'wallet-rpc', args: { method: 'Echo' } })
+    const { transferStateId } = query
+    const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'confirm-transfer', args: { id: transferStateId } })
+    setRes(res)
   }, [])
 
   return <div>
     <div>confirm!</div>
-    <div>{params}</div>
+    <div>{JSON.stringify(params)}</div>
     <button onClick={() => window.close()}>no</button>
-    <button>yes</button>
+    <button onClick={confirmTransfer}>yes</button>
+    <div>{JSON.stringify(res)}</div>
   </div>
 }
 

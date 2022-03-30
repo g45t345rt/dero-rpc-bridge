@@ -111,6 +111,12 @@ body {
   opacity: 1;
 }
 
+.input-button:disabled {
+  opacity: .5;
+  user-select: none;
+  cursor: default;
+}
+
 .input-checkbox {
   display: flex;
   justify-content: space-between;

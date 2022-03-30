@@ -25,12 +25,12 @@ export default class DeroBridgeApi {
     return promise
   }
 
-  deamonRPC(method, params) {
-    return this.call({ type: 'deamon-rpc', args: { method, params } })
+  deamon(action, args) {
+    return this.call({ entity: 'deamon', action, args })
   }
 
-  walletRPC(method, params) {
-    return this.call({ type: 'wallet-rpc', args: { method, params } })
+  wallet(action, args) {
+    return this.call({ entity: 'wallet', action, args })
   }
 
   init() {
