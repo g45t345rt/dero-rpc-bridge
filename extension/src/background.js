@@ -30,8 +30,8 @@ const rpcCall = async (options) => {
     })
 
     if (res.ok) {
-      const result = await res.json()
-      return { result }
+      const data = await res.json()
+      return { data }
     } else {
       return { err: res.statusText }
     }
@@ -52,18 +52,38 @@ const listen = () => {
       const { action, args } = message
 
       const options = { url: config.deamonRPC }
+
       if (action === 'echo') {
-        const res = await rpcCall({ ...options, method: 'Echo' })
+        const res = await rpcCall({ ...options, method: 'echo', params: args })
+        return Promise.resolve(res)
+      }
+
+      if (action === 'ping') {
+        const res = await rpcCall({ ...options, method: 'ping' })
+        return Promise.resolve(res)
+      }
+
+      if (action === 'get-random-address') {
+        const res = await rpcCall({ ...options, method: 'getrandomaddress' })
         return Promise.resolve(res)
       }
 
       if (action === 'get-gas-estimate') {
-        const res = await rpcCall({ ...options, method: 'GetGasEstimate', params: args })
-        return Promise.resolve(res)
+        const res1 = await rpcCall({ url: config.walletRPC, method: 'getaddress' })
+        const signer = res1.data.result.address
+
+        const res2 = await rpcCall({
+          ...options, method: 'getgasestimate', params: {
+            ...args,
+            signer
+          }
+        })
+
+        return Promise.resolve(res2)
       }
 
       if (action === 'get-sc') {
-        const res = await rpcCall({ ...options, method: 'GetSC', params: args })
+        const res = await rpcCall({ ...options, method: 'getsc', params: args })
         return Promise.resolve(res)
       }
 
@@ -79,7 +99,7 @@ const listen = () => {
       }
 
       if (action === 'echo') {
-        const res = await rpcCall({ ...options, method: 'Echo', params: args })
+        const res = await rpcCall({ ...options, method: 'echo', params: args })
         return Promise.resolve(res)
       }
 
@@ -106,7 +126,7 @@ const listen = () => {
           left,
           top,
           width,
-          height,
+          height
         })
 
         return promise
@@ -131,7 +151,7 @@ const listen = () => {
         const transferState = transferStateMap.get(args.id)
         if (!transferState) return Promise.reject({ err: 'Transfer state not found.' })
 
-        const res = await rpcCall({ ...options, method: 'Transfer', params: transferState.params })
+        const res = await rpcCall({ ...options, method: 'transfer', params: transferState.params })
         transferState.resolve(res)
         transferStateMap.delete(args.id)
         return Promise.resolve(res)

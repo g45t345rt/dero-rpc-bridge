@@ -6,8 +6,6 @@ import { createHashHistory } from 'history'
 import querystring from 'query-string'
 
 const Popup = () => {
-  const lockTransfer = true
-
   const [deamonRPCText, setDeamonRPCText] = useState('')
   const [deamonRPCStatus, setDeamonRPCStatus] = useState('')
   const refDeamonRPC = useRef()
@@ -22,7 +20,8 @@ const Popup = () => {
   const checkDeamonRPC = useCallback(async () => {
     setDeamonRPCText('loading...')
     setDeamonRPCStatus('loading')
-    const res = await browser.runtime.sendMessage({ entity: 'deamon', action: 'echo' })
+    const res = await browser.runtime.sendMessage({ entity: 'deamon', action: 'ping' })
+    console.log(res)
     const { err } = res
     if (err) {
       setDeamonRPCText(err)
@@ -37,6 +36,7 @@ const Popup = () => {
     setWalletRPCText('loading...')
     setWalletRPCStatus('loading')
     const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'echo' })
+    console.log(res)
     const { err } = res
     if (err) {
       setWalletRPCText(err)

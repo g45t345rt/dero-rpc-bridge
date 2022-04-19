@@ -11,12 +11,17 @@ export default class DeroBridgeApi {
     if (!this.initialized) throw `Not initialized.`
     const id = nanoid()
     const msg = { id, cmd }
-    const promise = new Promise((resolve) => {
+    const promise = new Promise((resolve, reject) => {
       this.channel.port1.addEventListener('message', (event) => {
         if (event.data.id === id) {
           resolve(event.data.data)
         }
-      }, false)
+
+        if (event.data === 'disconnected') {
+          this.initialized = false
+          reject(event)
+        }
+      }, { once: true })
 
       this.channel.port1.start()
     })
@@ -37,22 +42,22 @@ export default class DeroBridgeApi {
     if (this.initialized) throw `Already initialized.`
 
     return new Promise((resolve, reject) => {
+      let timeoutId = setTimeout(() => {
+        if (!this.initialized) reject(`Can't initialized.`)
+      }, 1000)
+
       this.channel.port1.addEventListener('message', (event) => {
         if (event.data === 'initialized') {
           this.initialized = true
           resolve()
+        } else {
+          clearTimeout(timeoutId)
+          reject(`Can't initialized.`)
         }
-      })
+      }, { once: true })
 
       this.channel.port1.start()
-
-      setTimeout(() => {
-        if (!this.initialized) reject(`Can't initialized.`)
-      }, 1000)
-
-      window.addEventListener('load', () => {
-        window.postMessage('init-dero-bridge', '*', [this.channel.port2])
-      })
+      window.postMessage('init-dero-bridge', '*', [this.channel.port2])
     })
   }
 }
