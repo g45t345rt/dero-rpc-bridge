@@ -1,4 +1,5 @@
 :root {
+  --body-background: #121212;
   --background: #222222;
   --text: #efefef;
   --success: #34b934;
@@ -8,14 +9,25 @@
 }
 
 body {
-  background-color: var(--background);
+  background-color: var(--body-background);
   color: var(--text);
-  width: 210px;
   margin: 0;
 }
 
-.app {
+.content-pad {
   padding: 1em;
+}
+
+.app-popup {
+  width: 210px;
+  background-color: var(--background);
+}
+
+.confirm-popup {
+  min-width: 200px;
+  max-width: 350px;
+  margin: 0 auto;
+  background-color: var(--background);
 }
 
 .app-title {
@@ -133,4 +145,38 @@ body {
   border-radius: 5px;
   margin: 0.5em 0;
   opacity: 0.3;
+}
+
+.row-grid {
+  display: grid;
+  grid-auto-flow: row;
+  gap: .5em
+}
+
+.td-key {
+  font-weight: bold;
+  margin-bottom: .25em;
+}
+
+.break-all {
+  word-break: break-all;
+}
+
+.row-buttons {
+  display: grid;
+  grid-auto-flow: row;
+  gap: .5em;
+  margin-top: 1em;
+}
+
+.transfer-item {
+  padding: .5em;
+  background-color: #2a2a2a;
+  margin-bottom: .5em;
+}
+
+.sc-args {
+  padding: .5em;
+  background-color: #2a2a2a;
+  margin-top: .5em;
 }

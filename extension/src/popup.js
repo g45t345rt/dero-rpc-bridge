@@ -1,4 +1,4 @@
-import { render, h } from 'preact'
+import { render, h, Fragment } from 'preact'
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import Router from 'preact-router'
 import browser from 'webextension-polyfill'
@@ -81,12 +81,12 @@ const Popup = () => {
     checkWalletRPC()
   }, [])
 
-  return <div>
+  return <div class="app-popup">
     <div class="app-title">
       <img src="icon16.png" />
       DERO Bridge
     </div>
-    <div class="app">
+    <div class="content-pad">
       <div>
         <div class="input-title">Deamon RPC</div>
         <div class="input-wrap">
@@ -133,16 +133,69 @@ const getQuery = () => {
   return querystring.parse(search)
 }
 
+const dataToTable = (data) => {
+  Object.keys(data).map((key) => {
+    const value = data[key]
+  })
+}
+
+const KeyValueRow = (props) => {
+  const { key, value } = props
+  return <Fragment>
+    <tr>
+      <td class="td-key">{key}</td>
+    </tr>
+    <tr>
+      <td class="td-value">{value}</td>
+    </tr>
+  </Fragment>
+}
+
+const Table = (props) => {
+  const { data } = props
+  return <table class="table">
+    <tbody>
+      {Object.keys(data).map((key) => {
+        const value = data[key]
+
+        return <Fragment>
+          <tr>
+            <td class="td-key">{key}</td>
+          </tr>
+          <tr>
+            <td class="td-value">{JSON.stringify(value)}</td>
+          </tr>
+        </Fragment>
+      })}
+    </tbody>
+  </table>
+}
+
+const TransferItem = (props) => {
+  const { title, render } = props
+  let value = props.value
+  if (!value) return null
+  if (typeof render === 'function') value = render(value)
+  return <div>
+    <div class="td-key">{title}</div>
+    <div class="break-all">{value}</div>
+  </div>
+}
+
+const formatDero = (value) => {
+  return `${value / 100000} DERO`
+}
+
 const Confirm = () => {
   const query = getQuery()
 
-  const [params, setParams] = useState()
+  const [state, setState] = useState({})
   const [res, setRes] = useState()
 
   useEffect(async () => {
     const { transferStateId } = query
     const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } })
-    setParams(res)
+    setState(res)
     console.log(res)
   }, [])
 
@@ -152,12 +205,70 @@ const Confirm = () => {
     setRes(res)
   }, [])
 
-  return <div>
-    <div>confirm!</div>
-    <div>{JSON.stringify(params)}</div>
-    <button onClick={() => window.close()}>no</button>
-    <button onClick={confirmTransfer}>yes</button>
-    <div>{JSON.stringify(res)}</div>
+  if (res) {
+    const txid = res.data.result.txid
+    return <div class="confirm-popup">
+      <div class="app-title">TXID</div>
+      <div class="content-pad">
+        <div class="break-all">{txid}</div>
+        <div class="row-buttons">
+          <button class="input-button" onClick={() => window.close()}>close</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  const { params = {}, sender = {} } = state
+
+  return <div class="confirm-popup">
+    <div class="app-title">Confirm transfer?</div>
+    <div class="content-pad">
+      <div class="row-grid">
+        <TransferItem title="Initiated from" value={sender.url} />
+        <TransferItem title="Destination" value={params.destination} />
+        <TransferItem title="SC ID" value={params.scid} />
+        <TransferItem title="Amount" value={params.amount} render={(v) => formatDero(v)} />
+        <TransferItem title="Burn" value={params.burn} render={(v) => formatDero(v)} />
+        <TransferItem title="Transfers" value={params.transfers} render={() => {
+          return params.transfers.map((transfer) => {
+            return <div class="transfer-item">
+              <TransferItem title="Destination" value={transfer.destination} />
+              <TransferItem title="Amount" value={transfer.amount} render={(v) => formatDero(v)} />
+              <TransferItem title="Burn" value={transfer.burn} render={(v) => formatDero(v)} />
+            </div>
+          })
+        }} />
+        <TransferItem title="SC Invocation" value={params.sc_rpc} render={() => {
+          const sc_args = []
+          let scid = null
+          for (let i = 0; i < params.sc_rpc.length; i++) {
+            const item = params.sc_rpc[i]
+            if (item.name === 'SC_ID') {
+              scid = item.value
+              continue
+            }
+
+            if (item.name === 'SC_ACTION') continue
+            sc_args.push(item)
+          }
+
+          return <div>
+            {scid && <div>{scid}</div>}
+            <div class="sc-args">
+              {sc_args.map((arg) => {
+                return <span>{arg.value}&nbsp;</span>
+              })}
+            </div>
+          </div>
+        }} />
+        <TransferItem title="Ring size" value={params.ringsize} />
+        <TransferItem title="Fees" value={params.fees} render={(v) => formatDero(v)} />
+        <div class="row-buttons">
+          <button class="input-button" onClick={() => window.close()}>cancel</button>
+          <button class="input-button" onClick={confirmTransfer}>confirm</button>
+        </div>
+      </div>
+    </div>
   </div>
 }
 

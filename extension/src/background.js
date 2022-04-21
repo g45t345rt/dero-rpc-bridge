@@ -108,22 +108,24 @@ const listen = () => {
         const promise = new Promise((resolve) => {
           transferStateMap.set(transferStateId, {
             resolve,
-            params: args
+            params: args,
+            sender
           })
         })
 
         // vars to center confirm popup
         const window = await browser.windows.getCurrent()
-        const width = 200
-        const height = 200
+        const width = 275
+        const height = 350
         const tab = (await browser.tabs.query({ active: true, currentWindow: true }))[0]
         const left = Math.round(((tab.width / 2) - (width / 2)) + window.left)
         const top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
 
         browser.windows.create({
           url: `chrome-extension://${browser.runtime.id}/popup.html#/confirm?transferStateId=${transferStateId}`,
-          type: "popup",
+          type: "panel",
           left,
+          focused: true,
           top,
           width,
           height
@@ -164,14 +166,19 @@ const listen = () => {
   })
 }
 
-const main = async () => {
+const storeDefault = async () => {
   // Default wallet and deamon rpc endpoints
   const config = await browser.storage.local.get(['deamonRPC', 'walletRPC'])
   const { deamonRPC, walletRPC } = config
-  if (!deamonRPC) browser.storage.local.set({ deamonRPC: "http://localhost:20000" })
-  if (!walletRPC) browser.storage.local.set({ walletRPC: "http://localhost:40403" })
+  if (!deamonRPC) await browser.storage.local.set({ deamonRPC: "http://localhost:20000" })
+  if (!walletRPC) await browser.storage.local.set({ walletRPC: "http://localhost:40403" })
+}
 
+const main = async () => {
+  // Make sure you're not waiting for anything before adding browser.runtime.onMessage handler
+  // or you might get Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist (sendMessage before listener is initiated)
   listen()
+  storeDefault()
 }
 
 main()
