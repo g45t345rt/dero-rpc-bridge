@@ -4,14 +4,15 @@ import Router from 'preact-router'
 import browser from 'webextension-polyfill'
 import { createHashHistory } from 'history'
 import querystring from 'query-string'
+import to from 'await-to-js'
 
 const Popup = () => {
-  const [deamonRPCText, setDeamonRPCText] = useState('')
-  const [deamonRPCStatus, setDeamonRPCStatus] = useState('')
+  const [deamonRPCText, setDeamonRPCText] = useState(null)
+  const [deamonRPCStatus, setDeamonRPCStatus] = useState(null)
   const refDeamonRPC = useRef()
 
-  const [walletRPCText, setWalletRPCText] = useState('')
-  const [walletRPCStatus, setWalletRPCStatus] = useState('')
+  const [walletRPCText, setWalletRPCText] = useState(null)
+  const [walletRPCStatus, setWalletRPCStatus] = useState(null)
   const refWalletRPC = useRef()
 
   const refUserRPC = useRef()
@@ -20,11 +21,9 @@ const Popup = () => {
   const checkDeamonRPC = useCallback(async () => {
     setDeamonRPCText('loading...')
     setDeamonRPCStatus('loading')
-    const res = await browser.runtime.sendMessage({ entity: 'deamon', action: 'ping' })
-    console.log(res)
-    const { err } = res
+    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'deamon', action: 'ping' }))
     if (err) {
-      setDeamonRPCText(err)
+      setDeamonRPCText(err.message)
       setDeamonRPCStatus('error')
     } else {
       setDeamonRPCStatus('success')
@@ -35,11 +34,9 @@ const Popup = () => {
   const checkWalletRPC = useCallback(async () => {
     setWalletRPCText('loading...')
     setWalletRPCStatus('loading')
-    const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'echo' })
-    console.log(res)
-    const { err } = res
+    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'echo' }))
     if (err) {
-      setWalletRPCText(err)
+      setWalletRPCText(err.message)
       setWalletRPCStatus('error')
     } else {
       setWalletRPCText('Connected')
@@ -84,7 +81,7 @@ const Popup = () => {
   return <div class="app-popup">
     <div class="app-title">
       <img src="icon16.png" />
-      DERO Bridge
+      DERO RPC Bridge
     </div>
     <div class="content-pad">
       <div>
@@ -133,44 +130,6 @@ const getQuery = () => {
   return querystring.parse(search)
 }
 
-const dataToTable = (data) => {
-  Object.keys(data).map((key) => {
-    const value = data[key]
-  })
-}
-
-const KeyValueRow = (props) => {
-  const { key, value } = props
-  return <Fragment>
-    <tr>
-      <td class="td-key">{key}</td>
-    </tr>
-    <tr>
-      <td class="td-value">{value}</td>
-    </tr>
-  </Fragment>
-}
-
-const Table = (props) => {
-  const { data } = props
-  return <table class="table">
-    <tbody>
-      {Object.keys(data).map((key) => {
-        const value = data[key]
-
-        return <Fragment>
-          <tr>
-            <td class="td-key">{key}</td>
-          </tr>
-          <tr>
-            <td class="td-value">{JSON.stringify(value)}</td>
-          </tr>
-        </Fragment>
-      })}
-    </tbody>
-  </table>
-}
-
 const TransferItem = (props) => {
   const { title, render } = props
   let value = props.value
@@ -190,18 +149,23 @@ const Confirm = () => {
   const query = getQuery()
 
   const [state, setState] = useState({})
+  const [err, setErr] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [res, setRes] = useState()
 
   useEffect(async () => {
     const { transferStateId } = query
-    const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } })
+    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } }))
     setState(res)
     console.log(res)
   }, [])
 
   const confirmTransfer = useCallback(async () => {
     const { transferStateId } = query
-    const res = await browser.runtime.sendMessage({ entity: 'wallet', action: 'confirm-transfer', args: { id: transferStateId } })
+    setLoading(true)
+    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'confirm-transfer', args: { id: transferStateId } }))
+    setLoading(false)
+    if (err) return setErr(err.message)
     setRes(res)
   }, [])
 
@@ -264,8 +228,14 @@ const Confirm = () => {
         <TransferItem title="Ring size" value={params.ringsize} />
         <TransferItem title="Fees" value={params.fees} render={(v) => formatDero(v)} />
         <div class="row-buttons">
-          <button class="input-button" onClick={() => window.close()}>cancel</button>
-          <button class="input-button" onClick={confirmTransfer}>confirm</button>
+          <button class="input-button" onClick={() => window.close()} disabled={loading}>cancel</button>
+          <button class="input-button" onClick={confirmTransfer} disabled={loading}>confirm</button>
+        </div>
+        <div>
+          {loading && `loading...`}
+          {err && <div class="status-block">
+            <span class="error-dot" />{err}
+          </div>}
         </div>
       </div>
     </div>

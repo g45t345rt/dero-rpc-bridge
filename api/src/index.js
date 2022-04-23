@@ -8,7 +8,7 @@ export default class DeroBridgeApi {
   }
 
   call(cmd) {
-    if (!this.initialized) throw `Not initialized.`
+    if (!this.initialized) return Promise.reject(new Error(`Not initialized.`))
     const id = nanoid()
     const msg = { id, cmd }
     const promise = new Promise((resolve, reject) => {
@@ -39,7 +39,7 @@ export default class DeroBridgeApi {
   }
 
   init() {
-    if (this.initialized) throw `Already initialized.`
+    if (this.initialized) return Promise.reject(new Error(`Already initialized.`))
 
     return new Promise((resolve, reject) => {
       let timeoutId = setTimeout(() => {
