@@ -1,7 +1,6 @@
 {
   "name": "dero-rpc-bridge-ext",
   "private": "true",
-  "version": "1.0.0",
   "author": "g45t345rt",
   "scripts": {
     "build": "node build.js",

@@ -7,9 +7,9 @@ import querystring from 'query-string'
 import to from 'await-to-js'
 
 const Popup = () => {
-  const [deamonRPCText, setDeamonRPCText] = useState(null)
-  const [deamonRPCStatus, setDeamonRPCStatus] = useState(null)
-  const refDeamonRPC = useRef()
+  const [daemonRPCText, setDaemonRPCText] = useState(null)
+  const [daemonRPCStatus, setDaemonRPCStatus] = useState(null)
+  const refDaemonRPC = useRef()
 
   const [walletRPCText, setWalletRPCText] = useState(null)
   const [walletRPCStatus, setWalletRPCStatus] = useState(null)
@@ -18,36 +18,43 @@ const Popup = () => {
   const refUserRPC = useRef()
   const refPasswordRPC = useRef()
 
-  const checkDeamonRPC = useCallback(async () => {
-    setDeamonRPCText('loading...')
-    setDeamonRPCStatus('loading')
-    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'deamon', action: 'ping' }))
+  const [balance, setBalance] = useState(null)
+
+  const checkDaemonRPC = useCallback(async () => {
+    setDaemonRPCText('loading...')
+    setDaemonRPCStatus('loading')
+    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'daemon', action: 'ping' }))
     if (err) {
-      setDeamonRPCText(err.message)
-      setDeamonRPCStatus('error')
+      setDaemonRPCText(err.message)
+      setDaemonRPCStatus('error')
     } else {
-      setDeamonRPCStatus('success')
-      setDeamonRPCText('Connected')
+      setDaemonRPCStatus('success')
+      setDaemonRPCText('Connected')
     }
   })
 
   const checkWalletRPC = useCallback(async () => {
     setWalletRPCText('loading...')
     setWalletRPCStatus('loading')
-    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'echo' }))
-    if (err) {
-      setWalletRPCText(err.message)
+    setBalance(null)
+    const [echoErr, echoRes] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'echo' }))
+    if (echoErr) {
+      setWalletRPCText(echoErr.message)
       setWalletRPCStatus('error')
     } else {
       setWalletRPCText('Connected')
       setWalletRPCStatus('success')
+
+      const [balanceErr, balanceRes] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-balance' }))
+      const balance = balanceRes.data.result.balance
+      setBalance(balance)
     }
   })
 
-  const setDeamonRPC = useCallback(async () => {
-    const value = refDeamonRPC.current.value
-    await browser.storage.local.set({ deamonRPC: value })
-    checkDeamonRPC()
+  const setDaemonRPC = useCallback(async () => {
+    const value = refDaemonRPC.current.value
+    await browser.storage.local.set({ daemonRPC: value })
+    checkDaemonRPC()
   }, [])
 
 
@@ -68,13 +75,13 @@ const Popup = () => {
   }, [])
 
   useEffect(async () => {
-    const result = await browser.storage.local.get(['deamonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
-    refDeamonRPC.current.value = result.deamonRPC || ""
+    const result = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
+    refDaemonRPC.current.value = result.daemonRPC || ""
     refWalletRPC.current.value = result.walletRPC || ""
     refUserRPC.current.value = result.userRPC || ""
     refPasswordRPC.current.value = result.passwordRPC || ""
 
-    checkDeamonRPC()
+    checkDaemonRPC()
     checkWalletRPC()
   }, [])
 
@@ -85,14 +92,14 @@ const Popup = () => {
     </div>
     <div class="content-pad">
       <div>
-        <div class="input-title">Deamon RPC</div>
+        <div class="input-title">Daemon RPC</div>
         <div class="input-wrap">
-          <input ref={refDeamonRPC} class="input" type="text" />
-          <button class="input-button" onClick={setDeamonRPC} disabled={deamonRPCStatus === 'loading'}>Set</button>
+          <input ref={refDaemonRPC} class="input" type="text" />
+          <button class="input-button" onClick={setDaemonRPC} disabled={daemonRPCStatus === 'loading'}>Set</button>
         </div>
         <div class="status-block">
-          <span class={`${deamonRPCStatus}-dot`} />
-          {deamonRPCText}
+          <span class={`${daemonRPCStatus}-dot`} />
+          {daemonRPCText}
         </div>
       </div>
       <div>
@@ -105,6 +112,10 @@ const Popup = () => {
           <span class={`${walletRPCStatus}-dot`} />
           {walletRPCText}
         </div>
+        {balance && <div>
+          <div class="input-title">Balance</div>
+          <div>{formatDero(balance)}</div>
+        </div>}
       </div>
       <div class="separator" />
       <div class="input-title">RPC Login</div>

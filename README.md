@@ -1,6 +1,6 @@
 # DERO RPC BRIDGE
 
-## Brower extension
+## Browser extension
 
 Act as a bridge to dispatch Dero transaction from any website to your wallet.
 The extension will intercept any kind of transfer request and display a dialog window to confirm the transaction.

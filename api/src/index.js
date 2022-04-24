@@ -30,8 +30,8 @@ export default class DeroBridgeApi {
     return promise
   }
 
-  deamon(action, args) {
-    return this.call({ entity: 'deamon', action, args })
+  daemon(action, args) {
+    return this.call({ entity: 'daemon', action, args })
   }
 
   wallet(action, args) {

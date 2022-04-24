@@ -45,13 +45,13 @@ let popupOrigin = `chrome-extension://${browser.runtime.id}`
 
 const listen = () => {
   browser.runtime.onMessage.addListener(async (message, sender) => {
-    const config = await browser.storage.local.get(['deamonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
+    const config = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
 
     const { entity } = message
-    if (entity === 'deamon') {
+    if (entity === 'daemon') {
       const { action, args } = message
 
-      const options = { url: config.deamonRPC }
+      const options = { url: config.daemonRPC }
 
       if (action === 'echo') {
         const res = await rpcCall({ ...options, method: 'echo', params: args })
@@ -190,10 +190,10 @@ const listen = () => {
 }
 
 const storeDefault = async () => {
-  // Default wallet and deamon rpc endpoints
-  const config = await browser.storage.local.get(['deamonRPC', 'walletRPC'])
-  const { deamonRPC, walletRPC } = config
-  if (!deamonRPC) await browser.storage.local.set({ deamonRPC: "http://localhost:20000" })
+  // Default wallet and daemon rpc endpoints
+  const config = await browser.storage.local.get(['daemonRPC', 'walletRPC'])
+  const { daemonRPC, walletRPC } = config
+  if (!daemonRPC) await browser.storage.local.set({ daemonRPC: "http://localhost:20000" })
   if (!walletRPC) await browser.storage.local.set({ walletRPC: "http://localhost:40403" })
 }
 
