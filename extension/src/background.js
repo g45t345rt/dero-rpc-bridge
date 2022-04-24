@@ -75,7 +75,7 @@ const listen = () => {
       }
 
       if (action === 'get-gas-estimate') {
-        const getAddressRes = await rpcCall({ url: config.walletRPC, method: 'getaddress' })
+        const getAddressRes = await rpcCall({ url: config.walletRPC, method: 'getaddress', user: config.userRPC, password: config.passwordRPC })
         if (getAddressRes.err) return Promise.reject(new Error(getAddressRes.err))
 
         const signer = getAddressRes.data.result.address
