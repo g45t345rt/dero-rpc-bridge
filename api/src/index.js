@@ -14,7 +14,10 @@ export default class DeroBridgeApi {
     const promise = new Promise((resolve, reject) => {
       this.channel.port1.addEventListener('message', (event) => {
         if (event.data.id === id) {
-          resolve(event.data.data)
+          const { err, data } = event.data
+          if (data) resolve(data)
+          else if (err) reject(err)
+          else reject(new Error(`Empty event.`))
         }
 
         if (event.data === 'disconnected') {
@@ -43,7 +46,7 @@ export default class DeroBridgeApi {
 
     return new Promise((resolve, reject) => {
       let timeoutId = setTimeout(() => {
-        if (!this.initialized) reject(`Can't initialized.`)
+        if (!this.initialized) reject(new Error(`Can't initialized.`))
       }, 1000)
 
       this.channel.port1.addEventListener('message', (event) => {
@@ -52,7 +55,7 @@ export default class DeroBridgeApi {
           resolve()
         } else {
           clearTimeout(timeoutId)
-          reject(`Can't initialized.`)
+          reject(new Error(`Can't initialized.`))
         }
       }, { once: true })
 

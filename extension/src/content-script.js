@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill'
+import to from 'await-to-js'
 
 const onMessage = async (event) => {
   if (event.source != window) {
@@ -11,8 +12,8 @@ const onMessage = async (event) => {
     port2.onmessage = async (event) => {
       if (browser.runtime.id) {
         const { id, cmd } = event.data
-        const data = await browser.runtime.sendMessage(cmd)
-        port2.postMessage({ id, data })
+        const [err, data] = await to(browser.runtime.sendMessage(cmd))
+        port2.postMessage({ id, data, err })
       } else {
         port2.postMessage(`disconnected`)
       }

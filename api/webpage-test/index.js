@@ -36,9 +36,17 @@ const App = () => {
     console.log(res)
   }, [])
 
+  const getBalance = useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.wallet('get-balance'))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  })
+
   return <div>
     <div>{bridgeInitText}</div>
     <button onClick={transfer}>Send transfer</button>
+    <button onClick={getBalance}>Get balance</button>
   </div>
 }
 
