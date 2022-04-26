@@ -53,15 +53,8 @@ const listen = () => {
 
       const options = { url: config.daemonRPC }
 
-      if (action === 'echo') {
-        const res = await rpcCall({ ...options, method: 'echo', params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'ping') {
-        const res = await rpcCall({ ...options, method: 'ping' })
+      if (action === 'get-info') {
+        const res = await rpcCall({ ...options, method: 'getinfo' })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
@@ -108,13 +101,6 @@ const listen = () => {
         url: config.walletRPC,
         user: config.userRPC,
         password: config.passwordRPC
-      }
-
-      if (action === 'echo') {
-        const res = await rpcCall({ ...options, method: 'echo', params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
       }
 
       if (action === 'get-balance') {

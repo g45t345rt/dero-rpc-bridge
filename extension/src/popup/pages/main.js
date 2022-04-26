@@ -16,37 +16,54 @@ export default () => {
   const refUserRPC = React.useRef()
   const refPasswordRPC = React.useRef()
 
+  const [nodeHeight, setNodeHeight] = React.useState(null)
   const [balance, setBalance] = React.useState(null)
 
   const checkDaemonRPC = React.useCallback(async () => {
     setDaemonRPCText('loading...')
     setDaemonRPCStatus('loading')
-    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'daemon', action: 'ping' }))
+    setNodeHeight(null)
+    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'daemon', action: 'get-info' }))
     if (err) {
       setDaemonRPCText(err.message)
       setDaemonRPCStatus('error')
-    } else {
-      setDaemonRPCStatus('success')
-      setDaemonRPCText('Connected')
+      return
     }
+
+    if (res.data.error) {
+      console.log(res.data)
+      setDaemonRPCText(`Not a deamon`)
+      setDaemonRPCStatus('error')
+      return
+    }
+
+    setNodeHeight(res.data.result.height)
+    setDaemonRPCStatus('success')
+    setDaemonRPCText('Connected')
   })
 
   const checkWalletRPC = React.useCallback(async () => {
     setWalletRPCText('loading...')
     setWalletRPCStatus('loading')
     setBalance(null)
-    const [echoErr, echoRes] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'echo' }))
-    if (echoErr) {
-      setWalletRPCText(echoErr.message)
-      setWalletRPCStatus('error')
-    } else {
-      setWalletRPCText('Connected')
-      setWalletRPCStatus('success')
 
-      const [balanceErr, balanceRes] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-balance' }))
-      const balance = balanceRes.data.result.balance
-      setBalance(balance)
+    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-balance' }))
+
+    if (err) {
+      setWalletRPCText(err.message)
+      setWalletRPCStatus('error')
+      return
     }
+
+    if (res.data.error) {
+      setWalletRPCText(`Not a wallet`)
+      setWalletRPCStatus('error')
+      return
+    }
+
+    setBalance(res.data.result.balance)
+    setWalletRPCText('Connected')
+    setWalletRPCStatus('success')
   })
 
   const setDaemonRPC = React.useCallback(async () => {
@@ -54,7 +71,6 @@ export default () => {
     await browser.storage.local.set({ daemonRPC: value })
     checkDaemonRPC()
   }, [])
-
 
   const setWalletRPC = React.useCallback(async () => {
     const value = refWalletRPC.current.value
@@ -103,7 +119,12 @@ export default () => {
           <span className={`${daemonRPCStatus}-dot`} />
           {daemonRPCText}
         </div>
+        {nodeHeight && <div>
+          <div className="input-title">Node Height</div>
+          <div>{nodeHeight}</div>
+        </div>}
       </div>
+      <div className="separator" />
       <div>
         <div className="input-title">Wallet RPC</div>
         <div className="input-wrap">
