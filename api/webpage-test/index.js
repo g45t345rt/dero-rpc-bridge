@@ -1,14 +1,14 @@
-import { render, h } from 'preact'
-import { useEffect, useState, useCallback, useRef } from 'preact/hooks'
+import React from 'react'
+import ReactDOM from 'react-dom'
 import to from 'await-to-js'
 
 import DeroBridgeApi from '../src'
 
 const App = () => {
-  const deroBridgeApiRef = useRef()
-  const [bridgeInitText, setBridgeInitText] = useState('')
+  const deroBridgeApiRef = React.useRef()
+  const [bridgeInitText, setBridgeInitText] = React.useState('')
 
-  useEffect(async () => {
+  React.useEffect(async () => {
     const load = async () => {
       deroBridgeApiRef.current = new DeroBridgeApi()
       const deroBridgeApi = deroBridgeApiRef.current
@@ -24,7 +24,7 @@ const App = () => {
     return () => window.removeEventListener('load', load)
   }, [])
 
-  const transfer = useCallback(async () => {
+  const transfer = React.useCallback(async () => {
     const deroBridgeApi = deroBridgeApiRef.current
     const [err, res] = await to(deroBridgeApi.wallet('start-transfer', {
       scid: "00000000000000000000000000000000",
@@ -36,7 +36,7 @@ const App = () => {
     console.log(res)
   }, [])
 
-  const getBalance = useCallback(async () => {
+  const getBalance = React.useCallback(async () => {
     const deroBridgeApi = deroBridgeApiRef.current
     const [err, res] = await to(deroBridgeApi.wallet('get-balance'))
     if (err) alert(err.message)
@@ -50,4 +50,4 @@ const App = () => {
   </div>
 }
 
-render(<App />, document.getElementById('app'))
+ReactDOM.render(<App />, document.getElementById('app'))
