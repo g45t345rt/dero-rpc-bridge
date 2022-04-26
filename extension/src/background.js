@@ -3,6 +3,9 @@ import { nanoid } from 'nanoid'
 
 const rpcCall = async (options) => {
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(new Error(`timeout`)), 5000)
+
     const { url, user, password, method, params } = options
 
     const headers = {
@@ -26,8 +29,11 @@ const rpcCall = async (options) => {
     const res = await fetch(`${url}/json_rpc`, {
       method: "POST",
       headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: controller.signal
     })
+
+    clearTimeout(timeoutId)
 
     if (res.ok) {
       const data = await res.json()
@@ -36,6 +42,10 @@ const rpcCall = async (options) => {
       return { err: res.statusText }
     }
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return { err: `Timeout` }
+    }
+
     return { err: err.message }
   }
 }
