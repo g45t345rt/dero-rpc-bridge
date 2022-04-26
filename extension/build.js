@@ -12,7 +12,6 @@ esbuild.build({
   ],
   logLevel: 'debug',
   outdir: 'dist',
-  jsxFactory: 'h',
   loader: {
     '.js': 'jsx'
   },

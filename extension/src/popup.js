@@ -1,26 +1,26 @@
-import { render, h, Fragment } from 'preact'
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
-import Router from 'preact-router'
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Route, Routes } from 'react-router'
+import { HashRouter } from 'react-router-dom'
 import browser from 'webextension-polyfill'
-import { createHashHistory } from 'history'
 import querystring from 'query-string'
 import to from 'await-to-js'
 
 const Popup = () => {
-  const [daemonRPCText, setDaemonRPCText] = useState(null)
-  const [daemonRPCStatus, setDaemonRPCStatus] = useState(null)
-  const refDaemonRPC = useRef()
+  const [daemonRPCText, setDaemonRPCText] = React.useState(null)
+  const [daemonRPCStatus, setDaemonRPCStatus] = React.useState(null)
+  const refDaemonRPC = React.useRef()
 
-  const [walletRPCText, setWalletRPCText] = useState(null)
-  const [walletRPCStatus, setWalletRPCStatus] = useState(null)
-  const refWalletRPC = useRef()
+  const [walletRPCText, setWalletRPCText] = React.useState(null)
+  const [walletRPCStatus, setWalletRPCStatus] = React.useState(null)
+  const refWalletRPC = React.useRef()
 
-  const refUserRPC = useRef()
-  const refPasswordRPC = useRef()
+  const refUserRPC = React.useRef()
+  const refPasswordRPC = React.useRef()
 
-  const [balance, setBalance] = useState(null)
+  const [balance, setBalance] = React.useState(null)
 
-  const checkDaemonRPC = useCallback(async () => {
+  const checkDaemonRPC = React.useCallback(async () => {
     setDaemonRPCText('loading...')
     setDaemonRPCStatus('loading')
     const [err, res] = await to(browser.runtime.sendMessage({ entity: 'daemon', action: 'ping' }))
@@ -33,7 +33,7 @@ const Popup = () => {
     }
   })
 
-  const checkWalletRPC = useCallback(async () => {
+  const checkWalletRPC = React.useCallback(async () => {
     setWalletRPCText('loading...')
     setWalletRPCStatus('loading')
     setBalance(null)
@@ -51,30 +51,30 @@ const Popup = () => {
     }
   })
 
-  const setDaemonRPC = useCallback(async () => {
+  const setDaemonRPC = React.useCallback(async () => {
     const value = refDaemonRPC.current.value
     await browser.storage.local.set({ daemonRPC: value })
     checkDaemonRPC()
   }, [])
 
 
-  const setWalletRPC = useCallback(async () => {
+  const setWalletRPC = React.useCallback(async () => {
     const value = refWalletRPC.current.value
     await browser.storage.local.set({ walletRPC: value })
     checkWalletRPC()
   }, [])
 
-  const setUserRPC = useCallback(() => {
+  const setUserRPC = React.useCallback(() => {
     const value = refUserRPC.current.value
     browser.storage.local.set({ userRPC: value })
   }, [])
 
-  const setPasswordRPC = useCallback(() => {
+  const setPasswordRPC = React.useCallback(() => {
     const value = refPasswordRPC.current.value
     browser.storage.local.set({ passwordRPC: value })
   }, [])
 
-  useEffect(async () => {
+  React.useEffect(async () => {
     const result = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
     refDaemonRPC.current.value = result.daemonRPC || ""
     refWalletRPC.current.value = result.walletRPC || ""
@@ -159,19 +159,19 @@ const formatDero = (value) => {
 const Confirm = () => {
   const query = getQuery()
 
-  const [state, setState] = useState({})
-  const [err, setErr] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [res, setRes] = useState()
+  const [state, setState] = React.useState({})
+  const [err, setErr] = React.useState(null)
+  const [loading, setLoading] = React.useState(false)
+  const [res, setRes] = React.useState()
 
-  useEffect(async () => {
+  React.useEffect(async () => {
     const { transferStateId } = query
     const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } }))
     setState(res)
     console.log(res)
   }, [])
 
-  const confirmTransfer = useCallback(async () => {
+  const confirmTransfer = React.useCallback(async () => {
     const { transferStateId } = query
     setLoading(true)
     const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'confirm-transfer', args: { id: transferStateId } }))
@@ -254,10 +254,12 @@ const Confirm = () => {
 }
 
 const App = () => {
-  return <Router history={createHashHistory()}>
-    <Popup path="/" />
-    <Confirm path="/confirm" />
-  </Router>
+  return <HashRouter>
+    <Routes>
+      <Route path="/" element={<Popup />} />
+      <Route path="/confirm" element={<Confirm />} />
+    </Routes>
+  </HashRouter>
 }
 
-render(<App />, document.getElementById('app'))
+ReactDOM.render(<App />, document.getElementById('app'))
