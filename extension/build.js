@@ -6,9 +6,9 @@ const watch = args.indexOf('watch') !== -1
 
 esbuild.build({
   entryPoints: [
-    './src/popup.js',
-    './src/background.js',
-    './src/content-script.js'
+    './src/popup',
+    './src/background',
+    './src/content-script'
   ],
   logLevel: 'debug',
   outdir: 'dist',
