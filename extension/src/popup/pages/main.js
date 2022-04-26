@@ -2,7 +2,7 @@ import React from 'react'
 import browser from 'webextension-polyfill'
 import to from 'await-to-js'
 
-import formatDero from '../components/formatDero'
+import FormatDero from '../components/formatDero'
 
 export default () => {
   const [daemonRPCText, setDaemonRPCText] = React.useState(null)
@@ -72,61 +72,65 @@ export default () => {
     browser.storage.local.set({ passwordRPC: value })
   }, [])
 
-  React.useEffect(async () => {
-    const result = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
-    refDaemonRPC.current.value = result.daemonRPC || ""
-    refWalletRPC.current.value = result.walletRPC || ""
-    refUserRPC.current.value = result.userRPC || ""
-    refPasswordRPC.current.value = result.passwordRPC || ""
+  React.useEffect(() => {
+    const load = async () => {
+      const result = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
+      refDaemonRPC.current.value = result.daemonRPC || ""
+      refWalletRPC.current.value = result.walletRPC || ""
+      refUserRPC.current.value = result.userRPC || ""
+      refPasswordRPC.current.value = result.passwordRPC || ""
 
-    checkDaemonRPC()
-    checkWalletRPC()
+      checkDaemonRPC()
+      checkWalletRPC()
+    }
+
+    load()
   }, [])
 
-  return <div class="app-popup">
-    <div class="app-title">
+  return <div className="app-popup">
+    <div className="app-title">
       <img src="icon16.png" />
       DERO RPC Bridge
     </div>
-    <div class="content-pad">
+    <div className="content-pad">
       <div>
-        <div class="input-title">Daemon RPC</div>
-        <div class="input-wrap">
-          <input ref={refDaemonRPC} class="input" type="text" />
-          <button class="input-button" onClick={setDaemonRPC} disabled={daemonRPCStatus === 'loading'}>Set</button>
+        <div className="input-title">Daemon RPC</div>
+        <div className="input-wrap">
+          <input ref={refDaemonRPC} className="input" type="text" />
+          <button className="input-button" onClick={setDaemonRPC} disabled={daemonRPCStatus === 'loading'}>Set</button>
         </div>
-        <div class="status-block">
-          <span class={`${daemonRPCStatus}-dot`} />
+        <div className="status-block">
+          <span className={`${daemonRPCStatus}-dot`} />
           {daemonRPCText}
         </div>
       </div>
       <div>
-        <div class="input-title">Wallet RPC</div>
-        <div class="input-wrap">
-          <input ref={refWalletRPC} class="input" type="text" />
-          <button class="input-button" onClick={setWalletRPC} disabled={walletRPCStatus === 'loading'}>Set</button>
+        <div className="input-title">Wallet RPC</div>
+        <div className="input-wrap">
+          <input ref={refWalletRPC} className="input" type="text" />
+          <button className="input-button" onClick={setWalletRPC} disabled={walletRPCStatus === 'loading'}>Set</button>
         </div>
-        <div class="status-block">
-          <span class={`${walletRPCStatus}-dot`} />
+        <div className="status-block">
+          <span className={`${walletRPCStatus}-dot`} />
           {walletRPCText}
         </div>
         {balance && <div>
-          <div class="input-title">Balance</div>
-          <div>{formatDero(balance)}</div>
+          <div className="input-title">Balance</div>
+          <div><FormatDero value={balance} /></div>
         </div>}
       </div>
-      <div class="separator" />
-      <div class="input-title">RPC Login</div>
+      <div className="separator" />
+      <div className="input-title">RPC Login</div>
       <div>
-        <div class="input-title2">User</div>
-        <div class="input-wrap">
-          <input ref={refUserRPC} type="text" class="input" onChange={setUserRPC} />
+        <div className="input-title2">User</div>
+        <div className="input-wrap">
+          <input ref={refUserRPC} type="text" className="input" onChange={setUserRPC} />
         </div>
       </div>
       <div>
-        <div class="input-title2">Password</div>
-        <div class="input-wrap">
-          <input ref={refPasswordRPC} type="password" class="input" onChange={setPasswordRPC} />
+        <div className="input-title2">Password</div>
+        <div className="input-wrap">
+          <input ref={refPasswordRPC} type="password" className="input" onChange={setPasswordRPC} />
         </div>
       </div>
     </div>

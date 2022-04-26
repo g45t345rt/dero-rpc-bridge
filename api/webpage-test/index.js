@@ -8,7 +8,7 @@ const App = () => {
   const deroBridgeApiRef = React.useRef()
   const [bridgeInitText, setBridgeInitText] = React.useState('')
 
-  React.useEffect(async () => {
+  React.useEffect(() => {
     const load = async () => {
       deroBridgeApiRef.current = new DeroBridgeApi()
       const deroBridgeApi = deroBridgeApiRef.current

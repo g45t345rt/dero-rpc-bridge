@@ -1,7 +1,9 @@
 import React from 'react'
 import querystring from 'query-string'
+import to from 'await-to-js'
+import browser from 'webextension-polyfill'
 
-import formatDero from '../components/formatDero'
+import FormatDero from '../components/formatDero'
 
 const getQuery = () => {
   const href = window.location.href
@@ -15,8 +17,8 @@ const TransferItem = (props) => {
   if (!value) return null
   if (typeof render === 'function') value = render(value)
   return <div>
-    <div class="td-key">{title}</div>
-    <div class="break-all">{value}</div>
+    <div className="td-key">{title}</div>
+    <div className="break-all">{value}</div>
   </div>
 }
 
@@ -28,11 +30,15 @@ export default () => {
   const [loading, setLoading] = React.useState(false)
   const [res, setRes] = React.useState()
 
-  React.useEffect(async () => {
-    const { transferStateId } = query
-    const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } }))
-    setState(res)
-    console.log(res)
+  React.useEffect(() => {
+    const load = async () => {
+      const { transferStateId } = query
+      const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } }))
+      setState(res)
+      console.log(res)
+    }
+
+    load()
   }, [])
 
   const confirmTransfer = React.useCallback(async () => {
@@ -46,12 +52,12 @@ export default () => {
 
   if (res) {
     const txid = res.data.result.txid
-    return <div class="confirm-popup">
-      <div class="app-title">TXID</div>
-      <div class="content-pad">
-        <div class="break-all">{txid}</div>
-        <div class="row-buttons">
-          <button class="input-button" onClick={() => window.close()}>close</button>
+    return <div className="confirm-popup">
+      <div className="app-title">TXID</div>
+      <div className="content-pad">
+        <div className="break-all">{txid}</div>
+        <div className="row-buttons">
+          <button className="input-button" onClick={() => window.close()}>close</button>
         </div>
       </div>
     </div>
@@ -59,21 +65,21 @@ export default () => {
 
   const { params = {}, sender = {} } = state
 
-  return <div class="confirm-popup">
-    <div class="app-title">Confirm transfer?</div>
-    <div class="content-pad">
-      <div class="row-grid">
+  return <div className="confirm-popup">
+    <div className="app-title">Confirm transfer?</div>
+    <div className="content-pad">
+      <div className="row-grid">
         <TransferItem title="Initiated from" value={sender.url} />
         <TransferItem title="Destination" value={params.destination} />
         <TransferItem title="SC ID" value={params.scid} />
-        <TransferItem title="Amount" value={params.amount} render={(v) => formatDero(v)} />
-        <TransferItem title="Burn" value={params.burn} render={(v) => formatDero(v)} />
+        <TransferItem title="Amount" value={params.amount} render={(v) => <FormatDero value={v} />} />
+        <TransferItem title="Burn" value={params.burn} render={(v) => <FormatDero value={v} />} />
         <TransferItem title="Transfers" value={params.transfers} render={() => {
           return params.transfers.map((transfer) => {
-            return <div class="transfer-item">
+            return <div className="transfer-item">
               <TransferItem title="Destination" value={transfer.destination} />
-              <TransferItem title="Amount" value={transfer.amount} render={(v) => formatDero(v)} />
-              <TransferItem title="Burn" value={transfer.burn} render={(v) => formatDero(v)} />
+              <TransferItem title="Amount" value={transfer.amount} render={(v) => <FormatDero value={v} />} />
+              <TransferItem title="Burn" value={transfer.burn} render={(v) => <FormatDero value={v} />} />
             </div>
           })
         }} />
@@ -93,7 +99,7 @@ export default () => {
 
           return <div>
             {scid && <div>{scid}</div>}
-            <div class="sc-args">
+            <div className="sc-args">
               {sc_args.map((arg) => {
                 return <span>{arg.value}&nbsp;</span>
               })}
@@ -101,15 +107,15 @@ export default () => {
           </div>
         }} />
         <TransferItem title="Ring size" value={params.ringsize} />
-        <TransferItem title="Fees" value={params.fees} render={(v) => formatDero(v)} />
-        <div class="row-buttons">
-          <button class="input-button" onClick={() => window.close()} disabled={loading}>cancel</button>
-          <button class="input-button" onClick={confirmTransfer} disabled={loading}>confirm</button>
+        <TransferItem title="Fees" value={params.fees} render={(v) => <FormatDero value={v} />} />
+        <div className="row-buttons">
+          <button className="input-button" onClick={() => window.close()} disabled={loading}>cancel</button>
+          <button className="input-button" onClick={confirmTransfer} disabled={loading}>confirm</button>
         </div>
         <div>
           {loading && `loading...`}
-          {err && <div class="status-block">
-            <span class="error-dot" />{err}
+          {err && <div className="status-block">
+            <span className="error-dot" />{err}
           </div>}
         </div>
       </div>
