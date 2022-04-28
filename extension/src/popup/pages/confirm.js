@@ -75,8 +75,8 @@ export default () => {
         <TransferItem title="Amount" value={params.amount} render={(v) => <FormatDero value={v} />} />
         <TransferItem title="Burn" value={params.burn} render={(v) => <FormatDero value={v} />} />
         <TransferItem title="Transfers" value={params.transfers} render={() => {
-          return params.transfers.map((transfer) => {
-            return <div className="transfer-item">
+          return params.transfers.map((transfer, index) => {
+            return <div key={`transfer-${index}`} className="transfer-item">
               <TransferItem title="Destination" value={transfer.destination} />
               <TransferItem title="Amount" value={transfer.amount} render={(v) => <FormatDero value={v} />} />
               <TransferItem title="Burn" value={transfer.burn} render={(v) => <FormatDero value={v} />} />
@@ -101,7 +101,7 @@ export default () => {
             {scid && <div>{scid}</div>}
             <div className="sc-args">
               {sc_args.map((arg) => {
-                return <span>{arg.value}&nbsp;</span>
+                return <span key={arg.name}>{arg.value}&nbsp;</span>
               })}
             </div>
           </div>
