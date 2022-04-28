@@ -189,8 +189,8 @@ const storeDefault = async () => {
   // Default wallet and daemon rpc endpoints
   const config = await browser.storage.local.get(['daemonRPC', 'walletRPC'])
   const { daemonRPC, walletRPC } = config
-  if (!daemonRPC) await browser.storage.local.set({ daemonRPC: "http://localhost:20000" })
-  if (!walletRPC) await browser.storage.local.set({ walletRPC: "http://localhost:40403" })
+  if (!daemonRPC) await browser.storage.local.set({ daemonRPC: "http://localhost:10102" })
+  if (!walletRPC) await browser.storage.local.set({ walletRPC: "http://localhost:10103" })
 }
 
 const main = async () => {
