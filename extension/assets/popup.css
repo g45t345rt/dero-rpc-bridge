@@ -180,3 +180,13 @@ body {
   background-color: #2a2a2a;
   margin-top: .5em;
 }
+
+.reset-link {
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: .5;
+}
+
+.reset-link:hover {
+  opacity: 1;
+}

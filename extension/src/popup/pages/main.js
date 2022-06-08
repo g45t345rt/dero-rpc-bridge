@@ -88,6 +88,21 @@ export default () => {
     browser.storage.local.set({ passwordRPC: value })
   }, [])
 
+  const reset = React.useCallback(() => {
+    const yes = window.confirm('Are you sure you want to reset configuation?')
+    if (!yes) return
+
+    refDaemonRPC.current.value = 'http://localhost:10102'
+    refWalletRPC.current.value = 'http://localhost:10103'
+    refUserRPC.current.value = ''
+    refPasswordRPC.current.value = ''
+
+    setDaemonRPC()
+    setWalletRPC()
+    setUserRPC()
+    setPasswordRPC()
+  })
+
   React.useEffect(() => {
     const load = async () => {
       const result = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
@@ -154,6 +169,7 @@ export default () => {
           <input ref={refPasswordRPC} type="password" className="input" onChange={setPasswordRPC} />
         </div>
       </div>
+      <a className='reset-link' onClick={reset}>reset</a>
     </div>
   </div>
 }

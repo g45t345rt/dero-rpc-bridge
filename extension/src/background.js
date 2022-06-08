@@ -120,6 +120,13 @@ const listen = () => {
         return Promise.resolve(res)
       }
 
+      if (action === 'get-address') {
+        const res = await rpcCall({ ...options, method: 'getaddress' })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
       if (action === 'start-transfer') {
         const transferStateId = nanoid()
         const promise = new Promise((resolve) => {

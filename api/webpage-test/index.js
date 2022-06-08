@@ -43,10 +43,18 @@ const App = () => {
     else alert(JSON.stringify(res))
   })
 
+  const getAddress = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.wallet('get-address'))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  })
+
   return <div>
     <div>{bridgeInitText}</div>
     <button onClick={transfer}>Send transfer</button>
     <button onClick={getBalance}>Get balance</button>
+    <button onClick={getAddress}>Get address</button>
   </div>
 }
 
