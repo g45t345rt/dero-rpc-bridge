@@ -26,7 +26,8 @@ const rpcCall = async (options) => {
       body["params"] = params
     }
 
-    const res = await fetch(`${url}/json_rpc`, {
+    const fetchUrl = new URL('json_rpc', url)
+    const res = await fetch(fetchUrl, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
@@ -39,7 +40,7 @@ const rpcCall = async (options) => {
       const data = await res.json()
       return { data }
     } else {
-      return { err: res.statusText }
+      return { err: res.statusText || "Error" }
     }
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -72,6 +73,13 @@ const listen = () => {
 
       if (action === 'get-random-address') {
         const res = await rpcCall({ ...options, method: 'getrandomaddress' })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
+      if (action === 'get-height') {
+        const res = await rpcCall({ ...options, method: 'getheight' })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
@@ -113,8 +121,29 @@ const listen = () => {
         password: config.passwordRPC
       }
 
+      if (action === 'make-integrated-address') {
+        const res = await rpcCall({ ...options, method: `MakeIntegratedAddress`, params: args })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
+      if (action === 'split-integrated-address') {
+        const res = await rpcCall({ ...options, method: `SplitIntegratedAddress`, params: args })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
       if (action === 'get-balance') {
-        const res = await rpcCall({ ...options, method: `getbalance` })
+        const res = await rpcCall({ ...options, method: `getbalance`, params: args })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
+      if (action === 'get-height') {
+        const res = await rpcCall({ ...options, method: `getheight` })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)

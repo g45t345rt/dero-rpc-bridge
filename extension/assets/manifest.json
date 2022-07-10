@@ -1,7 +1,7 @@
 {
   "name": "Dero RPC Bridge",
   "description": "Safely connect your local wallet with a website using Dero RPC Bridge.",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "manifest_version": 3,
   "background": {
     "service_worker": "background.js"

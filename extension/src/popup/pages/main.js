@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill'
 import to from 'await-to-js'
 
 import FormatDero from '../components/formatDero'
+import manifest from '../../../assets/manifest.json'
 
 export default () => {
   const [daemonRPCText, setDaemonRPCText] = React.useState(null)
@@ -121,7 +122,7 @@ export default () => {
   return <div className="app-popup">
     <div className="app-title">
       <img src="icon16.png" />
-      DERO RPC Bridge
+      DERO RPC Bridge v{manifest.version}
     </div>
     <div className="content-pad">
       <div>
