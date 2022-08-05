@@ -27,13 +27,14 @@ const App = () => {
   const transfer = React.useCallback(async () => {
     const deroBridgeApi = deroBridgeApiRef.current
     const [err, res] = await to(deroBridgeApi.wallet('start-transfer', {
-      scid: '00000000000000000000000000000000',
-      destination: 'deto1qyg7mqwag7lch9267dttyrxy5jlc8tqwedtel77kpq0zh2zr7rvlsqgs2cz33',
-      amount: 100,
+      transfers: [{
+        destination: 'deto1qyg7mqwag7lch9267dttyrxy5jlc8tqwedtel77kpq0zh2zr7rvlsqgs2cz33',
+        amount: 100,
+      }]
     }))
 
-    console.log(err)
-    console.log(res)
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
   }, [])
 
   const getWalletBalance = React.useCallback(async () => {
@@ -95,8 +96,24 @@ const App = () => {
     else alert(JSON.stringify(res))
   }, [])
 
+  const [info, setInfo] = React.useState({})
+  React.useEffect(() => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    if (!deroBridgeApi) return
+
+    const getInfo = async () => {
+      const [err, res] = await to(deroBridgeApi.daemon('get-info'))
+      if (err) setInfo(err.message)
+      else setInfo(res)
+    }
+
+    const intervalId = setInterval(getInfo, 2000)
+    return () => clearInterval(intervalId)
+  }, [deroBridgeApiRef.current])
+
   return <div>
     <div>{bridgeInitText}</div>
+    <div>{JSON.stringify(info, null, 2)}</div>
     <button onClick={transfer}>Send transfer</button>
     <button onClick={getWalletBalance}>Get balance</button>
     <button onClick={getWalletTokenBalance}>Get token balance</button>

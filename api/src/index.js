@@ -11,21 +11,23 @@ export default class DeroBridgeApi {
     if (!this.initialized) return Promise.reject(new Error(`Not initialized.`))
     const id = nanoid()
     const msg = { id, cmd }
+
     const promise = new Promise((resolve, reject) => {
-      this.channel.port1.addEventListener('message', (event) => {
-        if (event.data.id === id) {
+      const onMessage = (event) => {
+        if (event.data === 'disconnected') {
+          this.initialized = false
+          reject(event)
+        } else if (event.data.id === id) {
           const { err, data } = event.data
           if (data) resolve(data)
           else if (err) reject(err)
           else reject(new Error(`Empty event.`))
-        }
 
-        if (event.data === 'disconnected') {
-          this.initialized = false
-          reject(event)
+          this.channel.port1.removeEventListener('message', onMessage)
         }
-      }, { once: true })
+      }
 
+      this.channel.port1.addEventListener('message', onMessage)
       this.channel.port1.start()
     })
 

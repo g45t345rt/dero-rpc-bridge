@@ -9,17 +9,17 @@
   },
   "dependencies": {
     "await-to-js": "^3.0.0",
-    "nanoid": "^3.3.2",
+    "nanoid": "^4.0.0",
     "query-string": "^7.1.1",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-router": "^6.3.0",
     "react-router-dom": "^6.3.0",
-    "web-ext": "^6.8.0",
+    "web-ext": "^7.1.1",
     "webextension-polyfill": "^0.9.0"
   },
   "devDependencies": {
-    "esbuild": "^0.14.28",
+    "esbuild": "^0.14.53",
     "esbuild-copy-static-files": "^0.1.0"
   }
 }

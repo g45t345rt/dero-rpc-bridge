@@ -50,6 +50,13 @@ export default () => {
     setRes(res)
   }, [])
 
+  const cancelTransfer = React.useCallback(async () => {
+    const { transferStateId } = query
+    const [err] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'cancel-transfer', args: { id: transferStateId } }))
+    if (err) return setErr(err.message)
+    window.close()
+  }, [])
+
   if (res) {
     const txid = res.data.result.txid
     return <div className="confirm-popup">
@@ -109,7 +116,7 @@ export default () => {
         <TransferItem title="Ring size" value={params.ringsize} />
         <TransferItem title="Fees" value={params.fees} render={(v) => <FormatDero value={v} />} />
         <div className="row-buttons">
-          <button className="input-button" onClick={() => window.close()} disabled={loading}>cancel</button>
+          <button className="input-button" onClick={cancelTransfer} disabled={loading}>cancel</button>
           <button className="input-button" onClick={confirmTransfer} disabled={loading}>confirm</button>
         </div>
         <div>

@@ -158,9 +158,10 @@ const listen = () => {
 
       if (action === 'start-transfer') {
         const transferStateId = nanoid()
-        const promise = new Promise((resolve) => {
+        const promise = new Promise((resolve, reject) => {
           transferStateMap.set(transferStateId, {
             resolve,
+            reject,
             params: args,
             sender
           })
@@ -170,9 +171,14 @@ const listen = () => {
         const window = await browser.windows.getCurrent()
         const width = 275
         const height = 350
-        const tab = (await browser.tabs.query({ active: true, currentWindow: true }))[0]
-        const left = Math.round(((tab.width / 2) - (width / 2)) + window.left)
-        const top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
+        let left = 0
+        let top = 0
+        const tabs = await browser.tabs.query({ currentWindow: true })
+        const tab = tabs[0]
+        if (tab) {
+          left = Math.round(((tab.width / 2) - (width / 2)) + window.left)
+          top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
+        }
 
         browser.windows.create({
           url: `chrome-extension://${browser.runtime.id}/popup.html#/confirm?transferStateId=${transferStateId}`,
@@ -197,6 +203,17 @@ const listen = () => {
         return Promise.resolve(transferState)
       }
 
+      if (action === 'cancel-transfer') {
+        if (sender.origin !== popupOrigin) {
+          return Promise.reject(new Error('Invalid action.'))
+        }
+
+        const transferState = transferStateMap.get(args.id)
+        if (!transferState) return Promise.reject(new Error('Transfer state not found.'))
+        transferState.reject(new Error('Transfer cancelled.'))
+        return Promise.resolve()
+      }
+
       // Execute the transaction from popup confirm - user validation
       if (action === 'confirm-transfer') {
         if (sender.origin !== popupOrigin) { // this is important to avoid the webpage calling this method and transfering funds without the user knowing
@@ -207,10 +224,14 @@ const listen = () => {
         if (!transferState) return Promise.reject(new Error('Transfer state not found.'))
 
         const res = await rpcCall({ ...options, method: 'transfer', params: transferState.params })
-        if (res.err) return Promise.reject(new Error(res.err))
+        transferStateMap.delete(args.id)
+
+        if (res.err) {
+          transferState.reject(new Error(res.err))
+          return Promise.reject(new Error(res.err))
+        }
 
         transferState.resolve(res)
-        transferStateMap.delete(args.id)
         return Promise.resolve(res)
       }
 
