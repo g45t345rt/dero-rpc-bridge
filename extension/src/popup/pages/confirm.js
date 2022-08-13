@@ -58,16 +58,28 @@ export default () => {
   }, [])
 
   if (res) {
-    const txid = res.data.result.txid
-    return <div className="confirm-popup">
-      <div className="app-title">TXID</div>
-      <div className="content-pad">
-        <div className="break-all">{txid}</div>
-        <div className="row-buttons">
-          <button className="input-button" onClick={() => window.close()}>close</button>
+    if (res.data.error) {
+      return <div className="confirm-popup">
+        <div className="app-title">Error</div>
+        <div className="content-pad">
+          <div className="break-all">{res.data.error.message}</div>
+          <div className="row-buttons">
+            <button className="input-button" onClick={() => window.close()}>close</button>
+          </div>
         </div>
       </div>
-    </div>
+    } else {
+      const txid = res.data.result.txid
+      return <div className="confirm-popup">
+        <div className="app-title">TXID</div>
+        <div className="content-pad">
+          <div className="break-all">{txid}</div>
+          <div className="row-buttons">
+            <button className="input-button" onClick={() => window.close()}>close</button>
+          </div>
+        </div>
+      </div>
+    }
   }
 
   const { params = {}, sender = {} } = state
