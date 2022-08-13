@@ -3,7 +3,7 @@ import querystring from 'query-string'
 import to from 'await-to-js'
 import browser from 'webextension-polyfill'
 
-import FormatDero from '../components/formatDero'
+import FormatAsset from '../components/formatAsset'
 
 const getQuery = () => {
   const href = window.location.href
@@ -77,16 +77,15 @@ export default () => {
     <div className="content-pad">
       <div className="row-grid">
         <TransferItem title="Initiated from" value={sender.url} />
-        <TransferItem title="Destination" value={params.destination} />
         <TransferItem title="SC ID" value={params.scid} />
-        <TransferItem title="Amount" value={params.amount} render={(v) => <FormatDero value={v} />} />
-        <TransferItem title="Burn" value={params.burn} render={(v) => <FormatDero value={v} />} />
         <TransferItem title="Transfers" value={params.transfers} render={() => {
           return params.transfers.map((transfer, index) => {
+            console.log(transfer)
             return <div key={`transfer-${index}`} className="transfer-item">
+              <TransferItem title="SCID" value={transfer.scid} />
               <TransferItem title="Destination" value={transfer.destination} />
-              <TransferItem title="Amount" value={transfer.amount} render={(v) => <FormatDero value={v} />} />
-              <TransferItem title="Burn" value={transfer.burn} render={(v) => <FormatDero value={v} />} />
+              <TransferItem title="Amount" value={transfer.amount} render={() => <FormatAsset scid={transfer.scid} value={transfer.amount} />} />
+              <TransferItem title="Burn" value={transfer.burn} render={() => <FormatAsset scid={transfer.scid} value={transfer.burn} />} />
             </div>
           })
         }} />
@@ -114,7 +113,7 @@ export default () => {
           </div>
         }} />
         <TransferItem title="Ring size" value={params.ringsize} />
-        <TransferItem title="Fees" value={params.fees} render={(v) => <FormatDero value={v} />} />
+        <TransferItem title="Fees" value={params.fees} render={() => <FormatDero value={params.fees} />} />
         <div className="row-buttons">
           <button className="input-button" onClick={cancelTransfer} disabled={loading}>cancel</button>
           <button className="input-button" onClick={confirmTransfer} disabled={loading}>confirm</button>

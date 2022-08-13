@@ -2,7 +2,7 @@ import React from 'react'
 import browser from 'webextension-polyfill'
 import to from 'await-to-js'
 
-import FormatDero from '../components/formatDero'
+import FormatAsset from '../components/formatAsset'
 import manifest from '../../../assets/manifest.json'
 
 export default () => {

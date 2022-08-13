@@ -24,12 +24,51 @@ const App = () => {
     return () => window.removeEventListener('load', load)
   }, [])
 
-  const transfer = React.useCallback(async () => {
+  const transferDERO = React.useCallback(async () => {
     const deroBridgeApi = deroBridgeApiRef.current
     const [err, res] = await to(deroBridgeApi.wallet('start-transfer', {
       transfers: [{
         destination: 'deto1qyg7mqwag7lch9267dttyrxy5jlc8tqwedtel77kpq0zh2zr7rvlsqgs2cz33',
         amount: 100,
+      }]
+    }))
+
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const transferAsset = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.wallet('start-transfer', {
+      transfers: [{
+        scid: 'd80bd69e9945251b9a0127f064268d0629e743fa7fffb14ad74dbb366f932291',
+        destination: 'deto1qyg7mqwag7lch9267dttyrxy5jlc8tqwedtel77kpq0zh2zr7rvlsqgs2cz33',
+        amount: 1,
+      }, {
+        scid: 'd80bd69e9945251b9a0127f064268d0629e743fa7fffb14ad74dbb366f932291',
+        destination: 'deto1qyg7mqwag7lch9267dttyrxy5jlc8tqwedtel77kpq0zh2zr7rvlsqgs2cz33',
+        burn: 1,
+      }]
+    }))
+
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const callSC = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.wallet('start-transfer', {
+      ringsize: 2,
+      sc_rpc: [
+        { name: "SC_ACTION", datatype: "U", value: 0 },
+        { name: "SC_ID", datatype: "H", value: "d80bd69e9945251b9a0127f064268d0629e743fa7fffb14ad74dbb366f932291" },
+        { name: "entrypoint", datatype: "S", value: "Test" },
+        { name: "arg", datatype: "S", value: "the_value" },
+      ],
+      transfers: [{
+        scid: 'd80bd69e9945251b9a0127f064268d0629e743fa7fffb14ad74dbb366f932291',
+        destination: 'deto1qyg7mqwag7lch9267dttyrxy5jlc8tqwedtel77kpq0zh2zr7rvlsqgs2cz33',
+        amount: 1,
       }]
     }))
 
@@ -114,7 +153,9 @@ const App = () => {
   return <div>
     <div>{bridgeInitText}</div>
     <div>{JSON.stringify(info, null, 2)}</div>
-    <button onClick={transfer}>Send transfer</button>
+    <button onClick={transferDERO}>Transfer DERO</button>
+    <button onClick={transferAsset}>Transfer ASSET</button>
+    <button onClick={callSC}>Call SC</button>
     <button onClick={getWalletBalance}>Get balance</button>
     <button onClick={getWalletTokenBalance}>Get token balance</button>
     <button onClick={getWalletAddress}>Get address</button>
