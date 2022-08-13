@@ -153,7 +153,7 @@ export default () => {
         </div>
         {balance && <div>
           <div className="input-title">Balance</div>
-          <div><FormatDero value={balance} /></div>
+          <div><FormatAsset value={balance} /></div>
         </div>}
       </div>
       <div className="separator" />

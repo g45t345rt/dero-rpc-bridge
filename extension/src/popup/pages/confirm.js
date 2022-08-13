@@ -113,7 +113,7 @@ export default () => {
           </div>
         }} />
         <TransferItem title="Ring size" value={params.ringsize} />
-        <TransferItem title="Fees" value={params.fees} render={() => <FormatDero value={params.fees} />} />
+        <TransferItem title="Fees" value={params.fees} render={() => <FormatAsset value={params.fees} />} />
         <div className="row-buttons">
           <button className="input-button" onClick={cancelTransfer} disabled={loading}>cancel</button>
           <button className="input-button" onClick={confirmTransfer} disabled={loading}>confirm</button>
