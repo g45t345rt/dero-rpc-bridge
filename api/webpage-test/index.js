@@ -83,9 +83,9 @@ const App = () => {
     else alert(JSON.stringify(res))
   }, [])
 
-  const getWalletTokenBalance = React.useCallback(async () => {
+  const getWalletAssetBalance = React.useCallback(async () => {
     const deroBridgeApi = deroBridgeApiRef.current
-    const [err, res] = await to(deroBridgeApi.wallet('get-balance', { SCID: '90029633f266d6d520f3415a83a7afeab6e45f5050f1fd703926e5df931f80cf' }))
+    const [err, res] = await to(deroBridgeApi.wallet('get-balance', { SCID: 'b2681c507c82c104ac6591f9a5f935bbf49a52f8f1faa6eb7dda8fdef81552fb' }))
     if (err) alert(err.message)
     else alert(JSON.stringify(res))
   }, [])
@@ -107,6 +107,41 @@ const App = () => {
   const getDaemonHeight = React.useCallback(async () => {
     const deroBridgeApi = deroBridgeApiRef.current
     const [err, res] = await to(deroBridgeApi.daemon('get-height'))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const getDaemonLastBlockHeader = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.daemon('get-last-block-header'))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const getPing = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.daemon('ping'))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const getBlock = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.daemon('get-block', { height: 1 }))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const getNameToAddress = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.daemon('name-to-address', { name: 'captain' }))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const getTransaction = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.daemon('get-transaction', { txs_hashes: ["6ba2877f558dd25cc0548255831bcab80e330debab8ec4f1782d6d797e61ba38"] }))
     if (err) alert(err.message)
     else alert(JSON.stringify(res))
   }, [])
@@ -157,12 +192,17 @@ const App = () => {
     <button onClick={transferAsset}>Transfer ASSET</button>
     <button onClick={callSC}>Call SC</button>
     <button onClick={getWalletBalance}>Get balance</button>
-    <button onClick={getWalletTokenBalance}>Get token balance</button>
+    <button onClick={getWalletAssetBalance}>Get asset balance</button>
     <button onClick={getWalletAddress}>Get address</button>
     <button onClick={getWalletHeight}>Get height</button>
     <button onClick={getDaemonHeight}>Get daemon height</button>
     <button onClick={makeIntegratedAddress}>Make integrated address</button>
     <button onClick={splitIntegratedAddress}>Split integrated address</button>
+    <button onClick={getDaemonLastBlockHeader}>Get last block header</button>
+    <button onClick={getBlock}>Get block (1)</button>
+    <button onClick={getNameToAddress}>Get name to address</button>
+    <button onClick={getTransaction}>Get transaction</button>
+    <button onClick={getPing}>Get ping</button>
   </div>
 }
 

@@ -64,36 +64,43 @@ const listen = () => {
 
       const options = { url: config.daemonRPC }
 
+      if (action === 'ping') {
+        const res = await rpcCall({ ...options, method: 'DERO.Ping' })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
       if (action === 'get-info') {
-        const res = await rpcCall({ ...options, method: 'getinfo' })
+        const res = await rpcCall({ ...options, method: 'DERO.GetInfo' })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
       }
 
       if (action === 'get-random-address') {
-        const res = await rpcCall({ ...options, method: 'getrandomaddress' })
+        const res = await rpcCall({ ...options, method: 'DERO.GetRandomAddress' })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
       }
 
       if (action === 'get-height') {
-        const res = await rpcCall({ ...options, method: 'getheight' })
+        const res = await rpcCall({ ...options, method: 'DERO.GetHeight' })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
       }
 
       if (action === 'get-gas-estimate') {
-        const getAddressRes = await rpcCall({ url: config.walletRPC, method: 'getaddress', user: config.userRPC, password: config.passwordRPC })
+        const getAddressRes = await rpcCall({ url: config.walletRPC, method: 'GetAddress', user: config.userRPC, password: config.passwordRPC })
         if (getAddressRes.err) return Promise.reject(new Error(getAddressRes.err))
 
         const signer = getAddressRes.data.result.address
 
         const gasEstimateRes = await rpcCall({
           ...options,
-          method: 'getgasestimate', params: {
+          method: 'DERO.GetGasEstimate', params: {
             ...args,
             signer
           }
@@ -104,7 +111,35 @@ const listen = () => {
       }
 
       if (action === 'get-sc') {
-        const res = await rpcCall({ ...options, method: 'getsc', params: args })
+        const res = await rpcCall({ ...options, method: 'DERO.GetSC', params: args })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
+      if (action === 'get-transaction') {
+        const res = await rpcCall({ ...options, method: 'DERO.GetTransaction', params: args })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
+      if (action === 'get-block') {
+        const res = await rpcCall({ ...options, method: 'DERO.GetBlock', params: args })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
+      if (action === 'name-to-address') {
+        const res = await rpcCall({ ...options, method: 'DERO.NameToAddress', params: args })
+        if (res.err) return Promise.reject(new Error(res.err))
+
+        return Promise.resolve(res)
+      }
+
+      if (action === 'get-last-block-header') {
+        const res = await rpcCall({ ...options, method: 'DERO.GetLastBlockHeader' })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
@@ -136,21 +171,21 @@ const listen = () => {
       }
 
       if (action === 'get-balance') {
-        const res = await rpcCall({ ...options, method: `getbalance`, params: args })
+        const res = await rpcCall({ ...options, method: `GetBalance`, params: args })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
       }
 
       if (action === 'get-height') {
-        const res = await rpcCall({ ...options, method: `getheight` })
+        const res = await rpcCall({ ...options, method: `GetHeight` })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
       }
 
       if (action === 'get-address') {
-        const res = await rpcCall({ ...options, method: 'getaddress' })
+        const res = await rpcCall({ ...options, method: 'GetAddress' })
         if (res.err) return Promise.reject(new Error(res.err))
 
         return Promise.resolve(res)
@@ -223,7 +258,7 @@ const listen = () => {
         const transferState = transferStateMap.get(args.id)
         if (!transferState) return Promise.reject(new Error('Transfer state not found.'))
 
-        const res = await rpcCall({ ...options, method: 'transfer', params: transferState.params })
+        const res = await rpcCall({ ...options, method: 'Transfer', params: transferState.params })
         transferStateMap.delete(args.id)
 
         if (res.err) {
