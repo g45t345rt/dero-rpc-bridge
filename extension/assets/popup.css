@@ -12,6 +12,8 @@ body {
   background-color: var(--body-background);
   color: var(--text);
   margin: 0;
+  font-size: 75%;
+  font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 .content-pad {

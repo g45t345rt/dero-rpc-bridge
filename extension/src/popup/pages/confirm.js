@@ -34,6 +34,7 @@ export default () => {
     const load = async () => {
       const { transferStateId } = query
       const [err, res] = await to(browser.runtime.sendMessage({ entity: 'wallet', action: 'get-transfer-state', args: { id: transferStateId } }))
+      if (err) return console.log(err)
       setState(res)
       console.log(res)
     }

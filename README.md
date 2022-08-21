@@ -2,9 +2,13 @@
 
 Safely connect your local wallet with a website using Dero RPC Bridge to power their dapps.
 
-## Chrome store
+## Chrome Store
 
 <https://chrome.google.com/webstore/detail/dero-rpc-bridge/nmofcfcaegdplgbjnadipebgfbodplpd>
+
+## Firefox ADD-ONS
+
+TODO
 
 ## Browser extension
 
@@ -19,12 +23,23 @@ Check folder `/api/webpage-test` on how to use the api.
 ## DEV
 
 Open first terminal  
-`cd api && npm run start`  
+`cd api && npm run start`
+
 Open second terminal  
 `cd extension && npm run start`  
 
-Pack extension for release  
-`cd extension && npm run build-ext` check folder `web-ext-artifacts`  
+## BUILD
+
+Go to extension folder and install NPM dependencies  
+`cd extension && npm install`  
+
+Pack extension manifest 3  
+`npm run build`  
+`npm run ext-build` check folder `web-ext-artifacts-m3`  
+
+Pack extension manifest 2 (firefox)  
+`npm run build-m2`  
+`npm run ext-build-m2` check folder `web-ext-artifacts-m2`  
 
 ## Donations
 

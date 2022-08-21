@@ -3,7 +3,7 @@ import browser from 'webextension-polyfill'
 import to from 'await-to-js'
 
 import FormatAsset from '../components/formatAsset'
-import manifest from '../../../assets/manifest.json'
+import manifest from '../../../manifest_3/manifest.json'
 
 export default () => {
   const [daemonRPCText, setDaemonRPCText] = React.useState(null)

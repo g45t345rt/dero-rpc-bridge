@@ -52,11 +52,12 @@ const rpcCall = async (options) => {
 }
 
 let transferStateMap = new Map()
-let popupOrigin = `chrome-extension://${browser.runtime.id}`
+let popupOrigin = browser.runtime.getURL(``).slice(0, -1) // slice to remove last slash
 
 const listen = () => {
   browser.runtime.onMessage.addListener(async (message, sender) => {
     const config = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
+    const senderUrl = new URL(sender.url)
 
     const { entity } = message
     if (entity === 'daemon') {
@@ -216,7 +217,7 @@ const listen = () => {
         }
 
         browser.windows.create({
-          url: `chrome-extension://${browser.runtime.id}/popup.html#/confirm?transferStateId=${transferStateId}`,
+          url: `${popupOrigin}/popup.html#/confirm?transferStateId=${transferStateId}`,
           type: "panel",
           left,
           focused: true,
@@ -230,7 +231,7 @@ const listen = () => {
 
       // Get transfer args for popup confirm
       if (action === 'get-transfer-state') {
-        if (sender.origin !== popupOrigin) {
+        if (senderUrl.origin !== popupOrigin) {
           return Promise.reject(new Error('Invalid action.'))
         }
 
@@ -239,7 +240,7 @@ const listen = () => {
       }
 
       if (action === 'cancel-transfer') {
-        if (sender.origin !== popupOrigin) {
+        if (senderUrl.origin !== popupOrigin) {
           return Promise.reject(new Error('Invalid action.'))
         }
 
@@ -251,7 +252,7 @@ const listen = () => {
 
       // Execute the transaction from popup confirm - user validation
       if (action === 'confirm-transfer') {
-        if (sender.origin !== popupOrigin) { // this is important to avoid the webpage calling this method and transfering funds without the user knowing
+        if (senderUrl.origin !== popupOrigin) { // this is important to avoid the webpage calling this method and transfering funds without the user knowing
           return Promise.reject(new Error('Invalid action.'))
         }
 

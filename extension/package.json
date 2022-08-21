@@ -2,24 +2,30 @@
   "name": "dero-rpc-bridge-ext",
   "private": "true",
   "author": "g45t345rt",
+  "type": "module",
   "scripts": {
     "build": "node build.js",
-    "start": "node build.js watch",
-    "build-ext": "web-ext build -s dist -o"
+    "build-m2": "node build.js --manifest2",
+    "start": "node build.js --watch",
+    "start-m2": "node build.js --watch --manifest2",
+    "ext-run": "web-ext run -s dist_m2",
+    "ext-build": "web-ext build -s dist_m3 -a ./web-ext-artifacts-m3 -o",
+    "ext-build-m2": "web-ext build -s dist_m2 -a ./web-ext-artifacts-m2 -o"
   },
   "dependencies": {
     "await-to-js": "^3.0.0",
+    "esbuild-copy-files-plugin": "^1.1.0",
     "nanoid": "^4.0.0",
     "query-string": "^7.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^6.3.0",
     "react-router-dom": "^6.3.0",
-    "web-ext": "^7.1.1",
-    "webextension-polyfill": "^0.9.0"
+    "web-ext": "^7.2.0",
+    "webextension-polyfill": "^0.10.0"
   },
   "devDependencies": {
-    "esbuild": "^0.14.53",
+    "esbuild": "^0.15.5",
     "esbuild-copy-static-files": "^0.1.0"
   }
 }
