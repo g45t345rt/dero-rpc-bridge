@@ -233,7 +233,7 @@ const listen = () => {
     }
 
     if (err) return Promise.reject(err)
-    if (res.err) return Promise.reject(res.err)
+    if (res && res.err) return Promise.reject(res.err)
     return Promise.resolve(res)
   })
 }
