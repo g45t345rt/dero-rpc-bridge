@@ -4,31 +4,31 @@ import { nanoid } from 'nanoid'
 const rpcCall = async (options) => {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(new Error(`timeout`)), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
     const { url, user, password, method, params } = options
 
     const headers = {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     }
 
     if (user && password) {
-      headers["Authorization"] = "Basic " + btoa(`${user}:${password}`)
+      headers['Authorization'] = `Basic ${btoa(`${user}:${password}`)}`
     }
 
     const body = {
-      "jsonrpc": "2.0",
-      "id": "1",
-      "method": method
+      'jsonrpc': '2.0',
+      'id': '1',
+      'method': method
     }
 
     if (params) {
-      body["params"] = params
+      body['params'] = params
     }
 
     const fetchUrl = new URL('json_rpc', url)
     const res = await fetch(fetchUrl, {
-      method: "POST",
+      method: 'POST',
       headers,
       body: JSON.stringify(body),
       signal: controller.signal
@@ -40,16 +40,23 @@ const rpcCall = async (options) => {
       const data = await res.json()
       return { data }
     } else {
-      return { err: res.statusText || "Error" }
+      return { err: new Error(`HTTP Error ${res.statusText}` || 'HTTP Error') }
     }
   } catch (err) {
-    if (err.name === 'AbortError') {
-      return { err: `Timeout` }
-    }
+    //if (err.name === 'AbortError') {
+    //return { err: new Error(`Timeout`) }
+    //}
 
-    return { err: err.message }
+    return { err }
   }
 }
+
+const ERROR_ACTION_NOT_ALLOWED = new Error(`Action not allowed.`)
+const ERROR_INVALID_DAEMON_ACTION = new Error(`Invalid [daemon] action.`)
+const ERROR_INVALID_WALLET_ACTION = new Error(`Invalid [wallet] action.`)
+const ERROR_INVALID_ENTITY = new Error(`Invalid entity [daemon, wallet].`)
+const ERROR_TRANSFER_STATE_NOT_FOUND = new Error(`Transfer state not found.`)
+const ERROR_TRANSFER_CANCELLED = new Error(`Transfer cancelled.`)
 
 let transferStateMap = new Map()
 let popupOrigin = browser.runtime.getURL(``).slice(0, -1) // slice to remove last slash
@@ -59,222 +66,175 @@ const listen = () => {
     const config = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
     const senderUrl = new URL(sender.url)
 
-    const { entity } = message
-    if (entity === 'daemon') {
-      const { action, args } = message
-
-      const options = { url: config.daemonRPC }
-
-      if (action === 'ping') {
-        const res = await rpcCall({ ...options, method: 'DERO.Ping' })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-info') {
-        const res = await rpcCall({ ...options, method: 'DERO.GetInfo' })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-random-address') {
-        const res = await rpcCall({ ...options, method: 'DERO.GetRandomAddress' })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-height') {
-        const res = await rpcCall({ ...options, method: 'DERO.GetHeight' })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-gas-estimate') {
-        const getAddressRes = await rpcCall({ url: config.walletRPC, method: 'GetAddress', user: config.userRPC, password: config.passwordRPC })
-        if (getAddressRes.err) return Promise.reject(new Error(getAddressRes.err))
-
-        const signer = getAddressRes.data.result.address
-
-        const gasEstimateRes = await rpcCall({
-          ...options,
-          method: 'DERO.GetGasEstimate', params: {
-            ...args,
-            signer
-          }
-        })
-        if (gasEstimateRes.err) return Promise.reject(new Error(gasEstimateRes.err))
-
-        return Promise.resolve(gasEstimateRes)
-      }
-
-      if (action === 'get-sc') {
-        const res = await rpcCall({ ...options, method: 'DERO.GetSC', params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-transaction') {
-        const res = await rpcCall({ ...options, method: 'DERO.GetTransaction', params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-block') {
-        const res = await rpcCall({ ...options, method: 'DERO.GetBlock', params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'name-to-address') {
-        const res = await rpcCall({ ...options, method: 'DERO.NameToAddress', params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-last-block-header') {
-        const res = await rpcCall({ ...options, method: 'DERO.GetLastBlockHeader' })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      return Promise.reject(new Error('Invalid action.'))
+    let err = null
+    let res = null
+    const { entity, action, args } = message
+    const daemonOptions = { url: config.daemonRPC }
+    const walletOptions = {
+      url: config.walletRPC,
+      user: config.userRPC,
+      password: config.passwordRPC
     }
 
-    if (entity === 'wallet') {
-      const { action, args } = message
-      const options = {
-        url: config.walletRPC,
-        user: config.userRPC,
-        password: config.passwordRPC
-      }
+    // For security, I'm hardcoding the method names instead of passing the action directly
+    switch (entity) {
+      case 'daemon':
+        switch (action) {
+          case 'ping':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.Ping' })
+            break
+          case 'get-info':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetInfo' })
+            break
+          case 'get-random-address':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetRandomAddress' })
+            break
+          case 'get-height':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetHeight' })
+            break
+          case 'get-gas-estimate':
+            const getAddressRes = await rpcCall({
+              ...walletOptions,
+              method: 'GetAddress',
+            })
 
-      if (action === 'make-integrated-address') {
-        const res = await rpcCall({ ...options, method: `MakeIntegratedAddress`, params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
+            if (getAddressRes.err) {
+              err = getAddressRes.err
+            } else {
+              const signer = getAddressRes.data.result.address
 
-        return Promise.resolve(res)
-      }
-
-      if (action === 'split-integrated-address') {
-        const res = await rpcCall({ ...options, method: `SplitIntegratedAddress`, params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-balance') {
-        const res = await rpcCall({ ...options, method: `GetBalance`, params: args })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-height') {
-        const res = await rpcCall({ ...options, method: `GetHeight` })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'get-address') {
-        const res = await rpcCall({ ...options, method: 'GetAddress' })
-        if (res.err) return Promise.reject(new Error(res.err))
-
-        return Promise.resolve(res)
-      }
-
-      if (action === 'start-transfer') {
-        const transferStateId = nanoid()
-        const promise = new Promise((resolve, reject) => {
-          transferStateMap.set(transferStateId, {
-            resolve,
-            reject,
-            params: args,
-            sender
-          })
-        })
-
-        // vars to center confirm popup
-        const window = await browser.windows.getCurrent()
-        const width = 275
-        const height = 350
-        let left = 0
-        let top = 0
-        const tabs = await browser.tabs.query({ currentWindow: true })
-        const tab = tabs[0]
-        if (tab) {
-          left = Math.round(((tab.width / 2) - (width / 2)) + window.left)
-          top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
+              res = await rpcCall({
+                ...daemonOptions,
+                method: 'DERO.GetGasEstimate', params: {
+                  ...args,
+                  signer
+                }
+              })
+            }
+            break
+          case 'get-sc':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetSC', params: args })
+            break
+          case 'get-transaction':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetTransaction', params: args })
+            break
+          case 'get-block':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetBlock', params: args })
+            break
+          case 'name-to-address':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.NameToAddress', params: args })
+            break
+          case 'get-last-block-header':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetLastBlockHeader' })
+            break
+          default:
+            err = ERROR_INVALID_DAEMON_ACTION
+            break
         }
+        break
+      case 'wallet':
+        switch (action) {
+          case 'make-integrated-address':
+            res = await rpcCall({ ...walletOptions, method: `MakeIntegratedAddress`, params: args })
+            break
+          case 'split-integrated-address':
+            res = await rpcCall({ ...walletOptions, method: `SplitIntegratedAddress`, params: args })
+            break
+          case 'get-balance':
+            res = await rpcCall({ ...walletOptions, method: `GetBalance`, params: args })
+            break
+          case 'get-height':
+            res = await rpcCall({ ...walletOptions, method: `GetHeight` })
+            break
+          case 'get-address':
+            res = await rpcCall({ ...walletOptions, method: 'GetAddress' })
+            break
+          case 'start-transfer':
+            const transferStateId = nanoid()
+            const promise = new Promise((resolve, reject) => {
+              transferStateMap.set(transferStateId, {
+                resolve,
+                reject,
+                params: args,
+                sender
+              })
+            })
 
-        browser.windows.create({
-          url: `${popupOrigin}/popup.html#/confirm?transferStateId=${transferStateId}`,
-          type: "panel",
-          left,
-          focused: true,
-          top,
-          width,
-          height
-        })
+            // vars to center confirm popup
+            const window = await browser.windows.getCurrent()
+            const width = 275
+            const height = 350
+            let left = 0
+            let top = 0
+            const tabs = await browser.tabs.query({ currentWindow: true })
+            const tab = tabs[0]
+            if (tab) {
+              left = Math.round(((tab.width / 2) - (width / 2)) + window.left)
+              top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
+            }
 
-        return promise
-      }
+            browser.windows.create({
+              url: `${popupOrigin}/popup.html#/confirm?transferStateId=${transferStateId}`,
+              type: 'panel',
+              left,
+              focused: true,
+              top,
+              width,
+              height
+            })
+            return promise
+          case 'get-transfer-state':
+            if (senderUrl.origin !== popupOrigin) {
+              err = ERROR_ACTION_NOT_ALLOWED
+            } else {
+              res = transferStateMap.get(args.id)
+            }
+            break
+          case 'cancel-transfer':
+            if (senderUrl.origin !== popupOrigin) {
+              err = ERROR_ACTION_NOT_ALLOWED
+            } else {
+              const transferState = transferStateMap.get(args.id)
+              if (!transferState) {
+                err = ERROR_TRANSFER_STATE_NOT_FOUND
+              } else {
+                transferState.reject(ERROR_TRANSFER_CANCELLED)
+              }
+            }
+            break
+          case 'confirm-transfer':
+            // Execute the transaction from popup confirm - user validation
+            if (senderUrl.origin !== popupOrigin) { // this is important to avoid the webpage calling this method and transfering funds without the user knowing
+              err = ERROR_ACTION_NOT_ALLOWED
+            } else {
+              const transferState = transferStateMap.get(args.id)
+              if (!transferState) {
+                err = ERROR_TRANSFER_STATE_NOT_FOUND
+              } else {
+                res = await rpcCall({ ...walletOptions, method: 'Transfer', params: transferState.params })
+                transferStateMap.delete(args.id)
 
-      // Get transfer args for popup confirm
-      if (action === 'get-transfer-state') {
-        if (senderUrl.origin !== popupOrigin) {
-          return Promise.reject(new Error('Invalid action.'))
+                if (res.err) {
+                  transferState.reject(res.err)
+                } else {
+                  transferState.resolve(res)
+                }
+              }
+            }
+            break
+          default:
+            err = ERROR_INVALID_WALLET_ACTION
+            break
         }
-
-        const transferState = transferStateMap.get(args.id)
-        return Promise.resolve(transferState)
-      }
-
-      if (action === 'cancel-transfer') {
-        if (senderUrl.origin !== popupOrigin) {
-          return Promise.reject(new Error('Invalid action.'))
-        }
-
-        const transferState = transferStateMap.get(args.id)
-        if (!transferState) return Promise.reject(new Error('Transfer state not found.'))
-        transferState.reject(new Error('Transfer cancelled.'))
-        return Promise.resolve()
-      }
-
-      // Execute the transaction from popup confirm - user validation
-      if (action === 'confirm-transfer') {
-        if (senderUrl.origin !== popupOrigin) { // this is important to avoid the webpage calling this method and transfering funds without the user knowing
-          return Promise.reject(new Error('Invalid action.'))
-        }
-
-        const transferState = transferStateMap.get(args.id)
-        if (!transferState) return Promise.reject(new Error('Transfer state not found.'))
-
-        const res = await rpcCall({ ...options, method: 'Transfer', params: transferState.params })
-        transferStateMap.delete(args.id)
-
-        if (res.err) {
-          transferState.reject(new Error(res.err))
-          return Promise.reject(new Error(res.err))
-        }
-
-        transferState.resolve(res)
-        return Promise.resolve(res)
-      }
-
-      return Promise.reject(new Error('Invalid action.'))
+        break
+      default:
+        err = ERROR_INVALID_ENTITY
+        break
     }
 
-    return Promise.reject(new Error('Invalid entity.'))
+    if (err) return Promise.reject(err)
+    if (res.err) return Promise.reject(res.err)
+    return Promise.resolve(res)
   })
 }
 
@@ -282,8 +242,8 @@ const storeDefault = async () => {
   // Default wallet and daemon rpc endpoints
   const config = await browser.storage.local.get(['daemonRPC', 'walletRPC'])
   const { daemonRPC, walletRPC } = config
-  if (!daemonRPC) await browser.storage.local.set({ daemonRPC: "http://localhost:10102" })
-  if (!walletRPC) await browser.storage.local.set({ walletRPC: "http://localhost:10103" })
+  if (!daemonRPC) await browser.storage.local.set({ daemonRPC: 'http://localhost:10102' })
+  if (!walletRPC) await browser.storage.local.set({ walletRPC: 'http://localhost:10103' })
 }
 
 const main = async () => {

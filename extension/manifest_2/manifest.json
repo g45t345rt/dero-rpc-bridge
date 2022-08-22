@@ -2,7 +2,7 @@
   "description": "Safely connect your local wallet with a website using Dero RPC Bridge.",
   "manifest_version": 2,
   "name": "Dero RPC Bridge",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "homepage_url": "https://github.com/g45t345rt/dero-rpc-bridge/tree/master/extension",
   "background": {
     "scripts": [
