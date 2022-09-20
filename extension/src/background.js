@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid'
 const rpcCall = async (options) => {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
     const { url, user, password, method, params } = options
 
@@ -43,9 +43,9 @@ const rpcCall = async (options) => {
       return { err: new Error(`HTTP Error ${res.statusText}` || 'HTTP Error') }
     }
   } catch (err) {
-    //if (err.name === 'AbortError') {
-    //return { err: new Error(`Timeout`) }
-    //}
+    if (err.name === 'AbortError') {
+      return { err: new Error(`Timeout`) }
+    }
 
     return { err }
   }
@@ -173,7 +173,7 @@ const listen = () => {
               top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
             }
 
-            browser.windows.create({
+            await browser.windows.create({
               url: `${popupOrigin}/popup.html#/confirm?transferStateId=${transferStateId}`,
               type: 'panel',
               left,
@@ -212,11 +212,10 @@ const listen = () => {
                 err = ERROR_TRANSFER_STATE_NOT_FOUND
               } else {
                 res = await rpcCall({ ...walletOptions, method: 'Transfer', params: transferState.params })
-                transferStateMap.delete(args.id)
-
                 if (res.err) {
                   transferState.reject(res.err)
                 } else {
+                  transferStateMap.delete(args.id)
                   transferState.resolve(res)
                 }
               }

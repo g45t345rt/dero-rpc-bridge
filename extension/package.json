@@ -8,6 +8,8 @@
     "build-m2": "node build.js --manifest2",
     "start": "node build.js --watch",
     "start-m2": "node build.js --watch --manifest2",
+    "ext-lint": "web-ext lint -s dist_m3",
+    "ext-lint-m2": "web-ext lint -s dist_m2",
     "ext-run": "web-ext run -s dist_m2",
     "ext-build": "web-ext build -s dist_m3 -a ./web-ext-artifacts-m3 -o",
     "ext-build-m2": "web-ext build -s dist_m2 -a ./web-ext-artifacts-m2 -o"
