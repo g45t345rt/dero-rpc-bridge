@@ -93,24 +93,7 @@ const listen = () => {
             res = await rpcCall({ ...daemonOptions, method: 'DERO.GetHeight' })
             break
           case 'get-gas-estimate':
-            const getAddressRes = await rpcCall({
-              ...walletOptions,
-              method: 'GetAddress',
-            })
-
-            if (getAddressRes.err) {
-              err = getAddressRes.err
-            } else {
-              const signer = getAddressRes.data.result.address
-
-              res = await rpcCall({
-                ...daemonOptions,
-                method: 'DERO.GetGasEstimate', params: {
-                  ...args,
-                  signer
-                }
-              })
-            }
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetGasEstimate', params: args })
             break
           case 'get-sc':
             res = await rpcCall({ ...daemonOptions, method: 'DERO.GetSC', params: args })
@@ -126,6 +109,12 @@ const listen = () => {
             break
           case 'get-last-block-header':
             res = await rpcCall({ ...daemonOptions, method: 'DERO.GetLastBlockHeader' })
+            break
+          case 'get-encrypted-balance':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetEncryptedBalance', params: args })
+            break
+          case 'get-tx-pool':
+            res = await rpcCall({ ...daemonOptions, method: 'DERO.GetTxPool' })
             break
           default:
             err = ERROR_INVALID_DAEMON_ACTION

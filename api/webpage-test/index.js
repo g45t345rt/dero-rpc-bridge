@@ -170,6 +170,23 @@ const App = () => {
     else alert(JSON.stringify(res))
   }, [])
 
+  const getEncryptedBalance = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.daemon('get-encrypted-balance', {
+      address: `deto1qyvyeyzrcm2fzf6kyq7egkes2ufgny5xn77y6typhfx9s7w3mvyd5qqynr5hx`,
+      topoheight: -1
+    }))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
+  const getTxPool = React.useCallback(async () => {
+    const deroBridgeApi = deroBridgeApiRef.current
+    const [err, res] = await to(deroBridgeApi.daemon('get-tx-pool'))
+    if (err) alert(err.message)
+    else alert(JSON.stringify(res))
+  }, [])
+
   const [info, setInfo] = React.useState({})
   React.useEffect(() => {
     const deroBridgeApi = deroBridgeApiRef.current
@@ -203,6 +220,8 @@ const App = () => {
     <button onClick={getNameToAddress}>Get name to address</button>
     <button onClick={getTransaction}>Get transaction</button>
     <button onClick={getPing}>Get ping</button>
+    <button onClick={getEncryptedBalance}>Get encrypted balance</button>
+    <button onClick={getTxPool}>Get tx pool</button>
   </div>
 }
 
