@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid'
 const rpcCall = async (options) => {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
     const { url, user, password, method, params } = options
 
@@ -43,9 +43,9 @@ const rpcCall = async (options) => {
       return { err: new Error(`HTTP Error ${res.statusText}` || 'HTTP Error') }
     }
   } catch (err) {
-    if (err.name === 'AbortError') {
+    /*if (err.name === 'AbortError') {
       return { err: new Error(`Timeout`) }
-    }
+    }*/
 
     return { err }
   }

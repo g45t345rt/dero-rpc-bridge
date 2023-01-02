@@ -8,7 +8,7 @@ Safely connect your local wallet with a website using Dero RPC Bridge to power t
 
 ## Firefox ADD-ONS
 
-TODO
+<https://addons.mozilla.org/en-US/firefox/addon/dero-rpc-bridge/>
 
 ## Browser extension
 
