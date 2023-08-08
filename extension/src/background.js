@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill'
 import { nanoid } from 'nanoid'
+import { HEARTBEAT_TIMEOUT } from './constants'
 
 const rpcCall = async (options) => {
   try {
@@ -9,7 +10,7 @@ const rpcCall = async (options) => {
     const { url, user, password, method, params } = options
 
     const headers = {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     }
 
     if (user && password) {
@@ -17,9 +18,9 @@ const rpcCall = async (options) => {
     }
 
     const body = {
-      'jsonrpc': '2.0',
-      'id': '1',
-      'method': method
+      jsonrpc: '2.0',
+      id: '1',
+      method: method
     }
 
     if (params) {
@@ -61,6 +62,19 @@ const ERROR_TRANSFER_CANCELLED = new Error(`Transfer cancelled.`)
 let transferStateMap = new Map()
 let popupOrigin = browser.runtime.getURL(``).slice(0, -1) // slice to remove last slash
 
+const heartbeatTimeout = (transferStateId, cleanOnly) => {
+  const transferState = transferStateMap.get(transferStateId)
+  if (transferState.timeoutId) {
+    clearTimeout(transferState.timeoutId)
+  }
+  if (!cleanOnly) {
+    const cancelTransfer = async () => {
+      transferState.reject(ERROR_TRANSFER_CANCELLED)
+    }
+    transferState.timeoutId = setTimeout(cancelTransfer, HEARTBEAT_TIMEOUT)
+  }
+}
+
 const listen = () => {
   browser.runtime.onMessage.addListener(async (message, sender) => {
     const config = await browser.storage.local.get(['daemonRPC', 'walletRPC', 'userRPC', 'passwordRPC'])
@@ -68,12 +82,17 @@ const listen = () => {
 
     let err = null
     let res = null
-    const { entity, action, args } = message
+    const { entity, action, args, description } = message
     const daemonOptions = { url: config.daemonRPC }
     const walletOptions = {
       url: config.walletRPC,
       user: config.userRPC,
       password: config.passwordRPC
+    }
+
+    if (action === 'heartbeat') {
+      heartbeatTimeout(args.id)
+      return
     }
 
     // For security, I'm hardcoding the method names instead of passing the action directly
@@ -145,21 +164,24 @@ const listen = () => {
                 resolve,
                 reject,
                 params: args,
+                description,
                 sender
               })
             })
 
             // vars to center confirm popup
+            const isFirefox = typeof InstallTrigger !== 'undefined'
+
             const window = await browser.windows.getCurrent()
-            const width = 275
-            const height = 350
+            const width = 500
+            const height = 506 + (isFirefox ? 35 : 0)
             let left = 0
             let top = 0
             const tabs = await browser.tabs.query({ currentWindow: true })
             const tab = tabs[0]
             if (tab) {
-              left = Math.round(((tab.width / 2) - (width / 2)) + window.left)
-              top = Math.round(((tab.height / 2) - (height / 2)) + window.top)
+              left = Math.round(tab.width / 2 - width / 2 + window.left)
+              top = Math.round(tab.height / 2 - height / 2 + window.top)
             }
 
             await browser.windows.create({
@@ -171,6 +193,9 @@ const listen = () => {
               width,
               height
             })
+
+            heartbeatTimeout(transferStateId)
+
             return promise
           case 'get-transfer-state':
             if (senderUrl.origin !== popupOrigin) {
@@ -187,13 +212,15 @@ const listen = () => {
               if (!transferState) {
                 err = ERROR_TRANSFER_STATE_NOT_FOUND
               } else {
+                heartbeatTimeout(args.id, true)
                 transferState.reject(ERROR_TRANSFER_CANCELLED)
               }
             }
             break
           case 'confirm-transfer':
             // Execute the transaction from popup confirm - user validation
-            if (senderUrl.origin !== popupOrigin) { // this is important to avoid the webpage calling this method and transfering funds without the user knowing
+            if (senderUrl.origin !== popupOrigin) {
+              // this is important to avoid the webpage calling this method and transfering funds without the user knowing
               err = ERROR_ACTION_NOT_ALLOWED
             } else {
               const transferState = transferStateMap.get(args.id)
